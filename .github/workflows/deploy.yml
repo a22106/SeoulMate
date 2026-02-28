@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "backend/**"
+      - "db/**"
       - "docker-compose.prod.yml"
 
 concurrency:
@@ -23,6 +24,18 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           GCLOUD_PROJECT: ${{ secrets.GCLOUD_PROJECT }}
+
+      - name: Apply database schema
+        run: psql "$DATABASE_URL" -f db/init.sql
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Verify GCP Application Default Credentials
+        run: |
+          if [ ! -f "${HOME}/.config/gcloud/application_default_credentials.json" ]; then
+            echo "ERROR: GCP ADC not found. Run 'gcloud auth application-default login' on this machine."
+            exit 1
+          fi
 
       - name: Deploy with Docker Compose
         run: docker compose -f docker-compose.prod.yml up -d --build
