@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
 	type ChatMessage,
@@ -66,6 +67,7 @@ export default function ChatInterface({
 	language,
 	conversationId,
 }: ChatInterfaceProps) {
+	const router = useRouter();
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isLoadingHistory, setIsLoadingHistory] = useState(!!conversationId);
@@ -120,7 +122,7 @@ export default function ChatInterface({
 					const conv = await createConversation(language);
 					activeConvId = conv.id;
 					setConvId(activeConvId);
-					window.history.replaceState(null, "", `/chat/${activeConvId}`);
+					router.replace(`/chat/${activeConvId}`);
 				} catch {
 					// Continue without persistence if creation fails
 				}
@@ -182,7 +184,7 @@ export default function ChatInterface({
 				},
 			);
 		},
-		[isLoading, messages, language, convId],
+		[isLoading, messages, language, convId, router.replace],
 	);
 
 	const handleQuickGuide = useCallback(
