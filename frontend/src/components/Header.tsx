@@ -15,6 +15,7 @@ interface HeaderProps {
 	onLanguageChange: (lang: string) => void;
 	onNewChat: () => void;
 	onSOS: () => void;
+	onHistory: () => void;
 }
 
 export default function Header({
@@ -22,6 +23,7 @@ export default function Header({
 	onLanguageChange,
 	onNewChat,
 	onSOS,
+	onHistory,
 }: HeaderProps) {
 	return (
 		<header className="flex shrink-0 items-center justify-between border-b border-subtle bg-surface px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
@@ -42,6 +44,28 @@ export default function Header({
 				</h1>
 			</button>
 			<div className="flex items-center gap-2">
+				<button
+					type="button"
+					onClick={onHistory}
+					className="rounded-[6px] border border-subtle bg-surface px-2.5 py-1.5 text-sm font-medium text-text-secondary transition-colors hover:bg-hover"
+					aria-label={t(language, "history")}
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					>
+						<title>History</title>
+						<path d="M12 8v4l3 3" />
+						<circle cx="12" cy="12" r="10" />
+					</svg>
+				</button>
 				<button
 					type="button"
 					onClick={onNewChat}

@@ -27,6 +27,14 @@ class MessageResponse(BaseModel):
     created_at: datetime
 
 
+class ConversationListItem(BaseModel):
+    id: StrFromUUID
+    language: str
+    preview: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
 class ConversationDetail(BaseModel):
     conversation: ConversationResponse
     messages: list[MessageResponse]

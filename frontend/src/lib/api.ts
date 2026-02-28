@@ -35,6 +35,20 @@ export interface ConversationDetail {
 	messages: MessageResponse[];
 }
 
+export interface ConversationListItem {
+	id: string;
+	language: string;
+	preview: string | null;
+	created_at: string;
+	updated_at: string;
+}
+
+export async function listConversations(): Promise<ConversationListItem[]> {
+	const res = await fetch(`${API_URL}/api/conversations`);
+	if (!res.ok) throw new Error(`API error: ${res.status}`);
+	return res.json();
+}
+
 export async function createConversation(
 	language: string,
 ): Promise<ConversationResponse> {

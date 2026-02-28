@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import ChatHistoryPanel from "@/components/ChatHistoryPanel";
 import ChatInterface from "@/components/ChatInterface";
 import Header from "@/components/Header";
 import SOSModal from "@/components/SOSModal";
@@ -13,6 +14,7 @@ export default function ChatPage() {
 	const router = useRouter();
 	const [language, setLanguage] = useState("English");
 	const [showSOS, setShowSOS] = useState(false);
+	const [showHistory, setShowHistory] = useState(false);
 	const [valid, setValid] = useState<boolean | null>(null);
 
 	useEffect(() => {
@@ -53,11 +55,19 @@ export default function ChatPage() {
 				onLanguageChange={setLanguage}
 				onNewChat={handleNewChat}
 				onSOS={() => setShowSOS(true)}
+				onHistory={() => setShowHistory(true)}
 			/>
 			<ChatInterface language={language} conversationId={params.id} />
 			<VoiceButton language={language} />
 			{showSOS && (
 				<SOSModal language={language} onClose={() => setShowSOS(false)} />
+			)}
+			{showHistory && (
+				<ChatHistoryPanel
+					language={language}
+					currentId={params.id}
+					onClose={() => setShowHistory(false)}
+				/>
 			)}
 		</div>
 	);

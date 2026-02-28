@@ -31,6 +31,23 @@ async def get_messages(conversation_id: str) -> list[dict]:
         return await rows.fetchall()
 
 
+async def list_conversations(limit: int = 50) -> list[dict]:
+    pool = get_pool()
+    async with pool.connection() as conn:
+        rows = await conn.execute(
+            "SELECT c.*, ("
+            "  SELECT text FROM messages"
+            "  WHERE conversation_id = c.id AND role = 'user'"
+            "  ORDER BY created_at ASC LIMIT 1"
+            ") AS preview "
+            "FROM conversations c "
+            "ORDER BY c.updated_at DESC "
+            "LIMIT %s",
+            (limit,),
+        )
+        return await rows.fetchall()
+
+
 async def save_message(
     conversation_id: str, role: str, text: str, image_included: bool = False
 ) -> dict:

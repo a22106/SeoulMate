@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException
 from schemas.conversation import (
     ConversationCreate,
     ConversationDetail,
+    ConversationListItem,
     ConversationResponse,
     MessageResponse,
 )
@@ -10,9 +11,15 @@ from services.conversation import (
     create_conversation as create_conv,
     get_conversation,
     get_messages,
+    list_conversations,
 )
 
 router = APIRouter(prefix="/api/conversations")
+
+
+@router.get("", response_model=list[ConversationListItem])
+async def list_all():
+    return await list_conversations()
 
 
 @router.post("", status_code=201, response_model=ConversationResponse)

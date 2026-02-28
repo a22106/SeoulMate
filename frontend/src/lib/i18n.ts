@@ -8,6 +8,7 @@ const translations: Record<string, Record<string, string>> = {
 		copy: "📋 Copy",
 		copied: "✅ Copied!",
 		newChat: "+ New",
+		history: "History",
 		disclaimer:
 			"SeoulMate may make mistakes. Verify important information with official sources.",
 		"guide.housing": "Housing",
@@ -48,6 +49,7 @@ const translations: Record<string, Record<string, string>> = {
 		copy: "📋 복사",
 		copied: "✅ 복사됨!",
 		newChat: "+ 새 대화",
+		history: "기록",
 		disclaimer:
 			"SeoulMate는 실수할 수 있습니다. 중요한 정보는 공식 출처에서 확인하세요.",
 		"guide.housing": "주거",
@@ -88,6 +90,7 @@ const translations: Record<string, Record<string, string>> = {
 		copy: "📋 复制",
 		copied: "✅ 已复制!",
 		newChat: "+ 新对话",
+		history: "历史",
 		disclaimer: "SeoulMate可能会出错。请通过官方渠道核实重要信息。",
 		"guide.housing": "住房",
 		"guide.recycling": "垃圾分类",
@@ -128,6 +131,7 @@ const translations: Record<string, Record<string, string>> = {
 		copy: "📋 Sao chép",
 		copied: "✅ Đã sao chép!",
 		newChat: "+ Mới",
+		history: "Lịch sử",
 		disclaimer:
 			"SeoulMate có thể mắc lỗi. Hãy xác minh thông tin quan trọng với nguồn chính thức.",
 		"guide.housing": "Nhà ở",
@@ -168,6 +172,7 @@ const translations: Record<string, Record<string, string>> = {
 		copy: "📋 コピー",
 		copied: "✅ コピー済み!",
 		newChat: "+ 新規",
+		history: "履歴",
 		disclaimer:
 			"SeoulMateは間違えることがあります。重要な情報は公式情報源でご確認ください。",
 		"guide.housing": "住居",
