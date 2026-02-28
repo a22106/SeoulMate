@@ -46,6 +46,8 @@ export default function VoiceButton({ language }: VoiceButtonProps) {
 					height="24"
 					viewBox="0 0 24 24"
 					fill="currentColor"
+					role="img"
+					aria-label="Stop"
 				>
 					<rect x="6" y="6" width="12" height="12" rx="2" />
 				</svg>
@@ -60,6 +62,8 @@ export default function VoiceButton({ language }: VoiceButtonProps) {
 					strokeWidth="2"
 					strokeLinecap="round"
 					strokeLinejoin="round"
+					role="img"
+					aria-label="Microphone"
 				>
 					<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
 					<path d="M19 10v2a7 7 0 0 1-14 0v-2" />

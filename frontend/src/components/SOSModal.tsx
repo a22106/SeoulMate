@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { SOS_CATEGORIES, type SOSCategory } from "@/lib/sos";
 import { t } from "@/lib/i18n";
+import { SOS_CATEGORIES, type SOSCategory } from "@/lib/sos";
 
 interface SOSModalProps {
 	language: string;
@@ -13,7 +13,8 @@ export default function SOSModal({ language, onClose }: SOSModalProps) {
 	const [activeTab, setActiveTab] = useState<SOSCategory["id"]>("police");
 	const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
 
-	const category = SOS_CATEGORIES.find((c) => c.id === activeTab)!;
+	const category =
+		SOS_CATEGORIES.find((c) => c.id === activeTab) ?? SOS_CATEGORIES[0];
 
 	const handleCopy = (text: string, idx: number) => {
 		navigator.clipboard.writeText(text);
@@ -78,12 +79,8 @@ export default function SOSModal({ language, onClose }: SOSModalProps) {
 							onClick={() => handleCopy(script.korean, idx)}
 							className="rounded-2xl bg-white/15 p-4 text-left backdrop-blur transition-colors active:bg-white/25"
 						>
-							<p className="text-2xl font-bold leading-snug">
-								{script.korean}
-							</p>
-							<p className="mt-1 text-sm text-white/70">
-								{script.romanized}
-							</p>
+							<p className="text-2xl font-bold leading-snug">{script.korean}</p>
+							<p className="mt-1 text-sm text-white/70">{script.romanized}</p>
 							<p className="mt-1 text-sm text-white/90">
 								{t(language, script.translationKey)}
 							</p>
