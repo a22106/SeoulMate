@@ -11,6 +11,49 @@ interface ChatRequest {
 	image?: string;
 	language: string;
 	history: ChatMessage[];
+	conversation_id?: string;
+}
+
+export interface ConversationResponse {
+	id: string;
+	language: string;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface MessageResponse {
+	id: string;
+	conversation_id: string;
+	role: "user" | "assistant";
+	text: string;
+	image_included: boolean;
+	created_at: string;
+}
+
+export interface ConversationDetail {
+	conversation: ConversationResponse;
+	messages: MessageResponse[];
+}
+
+export async function createConversation(
+	language: string,
+): Promise<ConversationResponse> {
+	const res = await fetch(`${API_URL}/api/conversations`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ language }),
+	});
+	if (!res.ok) throw new Error(`API error: ${res.status}`);
+	return res.json();
+}
+
+export async function getConversation(id: string): Promise<ConversationDetail> {
+	const res = await fetch(`${API_URL}/api/conversations/${id}`);
+	if (!res.ok) {
+		if (res.status === 404) throw new Error("NOT_FOUND");
+		throw new Error(`API error: ${res.status}`);
+	}
+	return res.json();
 }
 
 export async function sendChatMessage(

@@ -4,15 +4,22 @@ services:
     container_name: seoulmate-backend
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "30002:8000"
     environment:
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - DATABASE_URL=${DATABASE_URL}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - GCP_SECRET_ENV=buoyant-sunbeam-466409-e7/seoulmate-env
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/adc.json
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/seoulmate
+    volumes:
+      - ~/.config/gcloud/application_default_credentials.json:/app/adc.json:ro
+    networks:
+      - postgres_default
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
+
+networks:
+  postgres_default:
+    external: true

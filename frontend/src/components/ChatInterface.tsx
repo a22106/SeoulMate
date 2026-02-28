@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { type ChatMessage, sendChatMessage } from "@/lib/api";
+import {
+	type ChatMessage,
+	createConversation,
+	getConversation,
+	sendChatMessage,
+} from "@/lib/api";
 import { t } from "@/lib/i18n";
 import ChatInput from "./ChatInput";
 import MessageBubble from "./MessageBubble";
@@ -54,11 +59,17 @@ const QUICK_GUIDES = [
 
 interface ChatInterfaceProps {
 	language: string;
+	conversationId?: string;
 }
 
-export default function ChatInterface({ language }: ChatInterfaceProps) {
+export default function ChatInterface({
+	language,
+	conversationId,
+}: ChatInterfaceProps) {
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isLoadingHistory, setIsLoadingHistory] = useState(!!conversationId);
+	const [convId, setConvId] = useState<string | undefined>(conversationId);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const ctaFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -71,9 +82,49 @@ export default function ChatInterface({ language }: ChatInterfaceProps) {
 		scrollToBottom();
 	}, [messages, scrollToBottom]);
 
+	// Load existing conversation messages
+	useEffect(() => {
+		if (!conversationId) return;
+		let cancelled = false;
+
+		(async () => {
+			try {
+				const detail = await getConversation(conversationId);
+				if (cancelled) return;
+				const loaded: Message[] = detail.messages.map((m) => ({
+					id: m.id,
+					role: m.role as "user" | "assistant",
+					text: m.text,
+				}));
+				setMessages(loaded);
+			} catch {
+				// 404 or error — redirect handled by parent page
+			} finally {
+				if (!cancelled) setIsLoadingHistory(false);
+			}
+		})();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [conversationId]);
+
 	const handleSend = useCallback(
-		(text: string, image?: string) => {
+		async (text: string, image?: string) => {
 			if (isLoading) return;
+
+			// Create conversation on first message if needed
+			let activeConvId = convId;
+			if (!activeConvId) {
+				try {
+					const conv = await createConversation(language);
+					activeConvId = conv.id;
+					setConvId(activeConvId);
+					window.history.replaceState(null, "", `/chat/${activeConvId}`);
+				} catch {
+					// Continue without persistence if creation fails
+				}
+			}
 
 			const userMsg: Message = {
 				id: Date.now().toString(),
@@ -99,7 +150,13 @@ export default function ChatInterface({ language }: ChatInterfaceProps) {
 			}));
 
 			sendChatMessage(
-				{ message: text, image, language, history },
+				{
+					message: text,
+					image,
+					language,
+					history,
+					conversation_id: activeConvId,
+				},
 				// onChunk
 				(chunk) => {
 					setMessages((prev) =>
@@ -125,7 +182,7 @@ export default function ChatInterface({ language }: ChatInterfaceProps) {
 				},
 			);
 		},
-		[isLoading, messages, language],
+		[isLoading, messages, language, convId],
 	);
 
 	const handleQuickGuide = useCallback(
@@ -150,6 +207,14 @@ export default function ChatInterface({ language }: ChatInterfaceProps) {
 		},
 		[handleSend],
 	);
+
+	if (isLoadingHistory) {
+		return (
+			<div className="flex min-h-0 flex-1 items-center justify-center">
+				<div className="h-8 w-8 animate-spin rounded-full border-4 border-seoul-blue border-t-transparent" />
+			</div>
+		);
+	}
 
 	const showWelcome = messages.length === 0;
 

@@ -13,20 +13,17 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, arm64]
     steps:
       - uses: actions/checkout@v4
 
       - name: Deploy with Docker Compose
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: docker compose -f docker-compose.prod.yml up -d --build
 
       - name: Wait for healthy
         run: |
-          for i in $(seq 1 12); do
-            if curl -sf http://localhost:8000/health; then
+          for i in $(seq 1 24); do
+            if curl -sf http://localhost:30002/health; then
               echo ""
               echo "Health check passed"
               exit 0
@@ -34,7 +31,7 @@ jobs:
             echo "Waiting for backend... ($i/12)"
             sleep 5
           done
-          echo "Health check failed after 60s"
+          echo "Health check failed after 120s"
           docker compose -f docker-compose.prod.yml logs backend
           exit 1
 

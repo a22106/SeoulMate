@@ -66,6 +66,7 @@ export default function MessageBubble({
 }: MessageBubbleProps) {
 	const isUser = role === "user";
 	const [copied, setCopied] = useState(false);
+	const [showLightbox, setShowLightbox] = useState(false);
 
 	const handleCopy = useCallback(() => {
 		navigator.clipboard.writeText(text);
@@ -86,11 +87,17 @@ export default function MessageBubble({
 			>
 				{image && isUser && (
 					<div className="p-2 pb-0">
-						<img
-							src={image}
-							alt="Uploaded"
-							className="max-h-48 rounded-[12px] object-cover"
-						/>
+						<button
+							type="button"
+							onClick={() => setShowLightbox(true)}
+							className="block"
+						>
+							<img
+								src={image}
+								alt="Uploaded"
+								className="max-h-48 cursor-pointer rounded-[12px] object-cover transition-opacity hover:opacity-80"
+							/>
+						</button>
 					</div>
 				)}
 				<div className="px-4 py-2.5">
@@ -121,6 +128,22 @@ export default function MessageBubble({
 					) : null}
 				</div>
 			</div>
+			{showLightbox && image && (
+				<button
+					type="button"
+					className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+					onClick={() => setShowLightbox(false)}
+					onKeyDown={(e) => {
+						if (e.key === "Escape") setShowLightbox(false);
+					}}
+				>
+					<img
+						src={image}
+						alt="Uploaded"
+						className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain"
+					/>
+				</button>
+			)}
 		</div>
 	);
 }

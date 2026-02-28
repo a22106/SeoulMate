@@ -14,3 +14,4 @@ class ChatRequest(BaseModel):
     image: Optional[str] = None
     language: str = "English"
     history: list[HistoryMessage] = []
+    conversation_id: Optional[str] = None
