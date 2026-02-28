@@ -68,11 +68,20 @@ hackerton/
 ### SSE Streaming Contract (POST /api/chat)
 
 Request:
+
 ```json
-{"message": "str", "image": "base64|null", "language": "English", "history": [{"role": "user|assistant", "text": "str", "image": "base64|null"}]}
+{
+  "message": "str",
+  "image": "base64|null",
+  "language": "English",
+  "history": [
+    { "role": "user|assistant", "text": "str", "image": "base64|null" }
+  ]
+}
 ```
 
 Response (text/event-stream):
+
 ```
 data: {"type": "text", "content": "chunk"}\n\n
 data: [DONE]\n\n
@@ -80,7 +89,7 @@ data: [DONE]\n\n
 
 ### Current Gemini Model
 
-`gemini-2.5-flash-preview-05-20` in `services/gemini.py`. Use Flash during dev, Pro for demo ($20 API budget).
+`gemini-3-flash-preview` in `services/gemini.py`. Use Flash during dev, Pro for demo ($20 API budget).
 
 ## Design System
 

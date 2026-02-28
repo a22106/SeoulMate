@@ -6,7 +6,7 @@ Gemini 멀티모달 API를 활용한 문서 해석 + 생활 상담 채팅 기능
 ## Tech Stack
 
 - **Framework**: FastAPI
-- **AI Model**: Gemini 2.5 Flash (`gemini-2.5-flash-preview-05-20`)
+- **AI Model**: Gemini 2.5 Flash (`gemini-3-flash-preview`)
 - **Search**: Google Search Grounding (실시간 행정 정보)
 - **Package Manager**: uv
 
@@ -42,12 +42,12 @@ uv run uvicorn main:app --reload
 }
 ```
 
-| 필드 | 타입 | 설명 |
-|------|------|------|
-| `message` | `string` | 사용자 메시지 (필수) |
-| `image` | `string?` | Base64 인코딩된 이미지 (선택) |
-| `language` | `string` | 응답 언어 (기본: `"English"`) |
-| `history` | `array` | 이전 대화 내역 `[{role, text, image?}]` |
+| 필드       | 타입      | 설명                                    |
+| ---------- | --------- | --------------------------------------- |
+| `message`  | `string`  | 사용자 메시지 (필수)                    |
+| `image`    | `string?` | Base64 인코딩된 이미지 (선택)           |
+| `language` | `string`  | 응답 언어 (기본: `"English"`)           |
+| `history`  | `array`   | 이전 대화 내역 `[{role, text, image?}]` |
 
 **Response:** `text/event-stream` (SSE)
 
@@ -88,6 +88,6 @@ uv run pytest
 
 ## Environment Variables
 
-| 변수 | 설명 |
-|------|------|
+| 변수             | 설명                                      |
+| ---------------- | ----------------------------------------- |
 | `GEMINI_API_KEY` | Google AI Studio에서 발급한 Gemini API 키 |

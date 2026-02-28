@@ -11,7 +11,7 @@ from schemas.chat import ChatRequest
 
 load_dotenv()
 
-MODEL = "gemini-2.5-flash-preview-05-20"
+MODEL = "gemini-3-flash-preview"
 
 SYSTEM_PROMPT = """You are SeoulMate, an expert life assistant for foreigners living in Seoul, South Korea.
 
