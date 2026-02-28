@@ -12,7 +12,9 @@ backend/
 │   └── gemini.py      # Gemini API 호출, 프롬프트 구성
 ├── schemas/           # Pydantic 모델 (요청/응답 스키마)
 │   └── chat.py        # ChatRequest, HistoryMessage 등
-├── requirements.txt
+├── tests/             # pytest 테스트 코드
+│   └── test_gemini.py # services/gemini.py 테스트
+├── pyproject.toml     # uv 프로젝트 설정
 └── .env.example
 ```
 
@@ -43,3 +45,20 @@ backend/
 - 미들웨어 설정 (CORS 등)
 - 라우터 등록 (`include_router`)
 - 앱 수준 이벤트 핸들러 (startup/shutdown)
+
+### 5. 패키지 관리 — uv 사용
+
+- 패키지 매니저는 **uv**를 사용한다. `pip`를 직접 사용하지 않는다.
+- 의존성 추가: `uv add <package>`
+- 개발 의존성 추가: `uv add --dev <package>`
+- 의존성 설치: `uv sync`
+- 스크립트 실행: `uv run <command>` (예: `uv run uvicorn main:app --reload`)
+- `pyproject.toml`로 프로젝트를 관리하고, `requirements.txt`는 사용하지 않는다.
+
+### 6. 테스트 — pytest
+
+- `services/`의 비즈니스 로직은 반드시 `tests/` 디렉토리에 pytest 테스트를 작성한다.
+- 테스트 파일 네이밍: `tests/test_<모듈명>.py` (예: `tests/test_gemini.py`)
+- 외부 API 호출(Gemini 등)은 mock 처리하여 테스트한다. 실제 API를 호출하지 않는다.
+- 테스트 실행: `uv run pytest`
+- 새로운 서비스 함수를 추가하면, 해당 함수의 테스트도 함께 작성한다.
