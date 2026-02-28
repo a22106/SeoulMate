@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { type ChatMessage, sendChatMessage } from "@/lib/api";
+import { t } from "@/lib/i18n";
 import ChatInput from "./ChatInput";
 import MessageBubble from "./MessageBubble";
 
@@ -15,37 +16,37 @@ interface Message {
 const QUICK_GUIDES = [
 	{
 		emoji: "🏠",
-		label: "Housing",
+		i18nKey: "guide.housing",
 		question:
 			"How does the housing deposit (전세/월세) system work in Seoul? What should I check before signing a lease?",
 	},
 	{
 		emoji: "🗑️",
-		label: "Recycling",
+		i18nKey: "guide.recycling",
 		question:
 			"How do I sort recycling in Seoul? What are the rules for food waste and regular trash?",
 	},
 	{
 		emoji: "🏥",
-		label: "Healthcare",
+		i18nKey: "guide.healthcare",
 		question:
 			"How do I sign up for Korean health insurance (건강보험) as a foreigner? How do I visit a hospital?",
 	},
 	{
 		emoji: "📄",
-		label: "Visa & Admin",
+		i18nKey: "guide.visa",
 		question:
 			"What do I need to know about extending my visa in Korea? Where is the immigration office?",
 	},
 	{
 		emoji: "🚇",
-		label: "Transport",
+		i18nKey: "guide.transport",
 		question:
 			"How do I get a transportation card and use the subway and bus system in Seoul?",
 	},
 	{
 		emoji: "💰",
-		label: "Banking",
+		i18nKey: "guide.banking",
 		question:
 			"How do I open a bank account in Korea as a foreigner? What documents do I need?",
 	},
@@ -59,6 +60,7 @@ export default function ChatInterface({ language }: ChatInterfaceProps) {
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+	const ctaFileInputRef = useRef<HTMLInputElement>(null);
 
 	const scrollToBottom = useCallback(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -133,6 +135,22 @@ export default function ChatInterface({ language }: ChatInterfaceProps) {
 		[handleSend],
 	);
 
+	const handleCtaImage = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const file = e.target.files?.[0];
+			if (!file) return;
+			const reader = new FileReader();
+			reader.onload = () => {
+				const result = reader.result as string;
+				const base64 = result.split(",")[1];
+				handleSend("What is this?", base64);
+			};
+			reader.readAsDataURL(file);
+			e.target.value = "";
+		},
+		[handleSend],
+	);
+
 	const showWelcome = messages.length === 0;
 
 	return (
@@ -142,7 +160,12 @@ export default function ChatInterface({ language }: ChatInterfaceProps) {
 				{showWelcome ? (
 					<div className="flex h-full flex-col items-center justify-center px-4 py-8">
 						{/* Welcome logo */}
-						<div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[24px] bg-seoul-blue text-2xl text-white shadow-[0_0_24px_rgba(37,99,235,0.3)]">
+						<div
+							className="mb-4 flex h-16 w-16 items-center justify-center rounded-[24px] text-2xl text-white shadow-[0_0_24px_rgba(37,99,235,0.3)]"
+							style={{
+								background: "linear-gradient(135deg, #2563EB, #7C3AED)",
+							}}
+						>
 							S
 						</div>
 						<h2
@@ -151,27 +174,51 @@ export default function ChatInterface({ language }: ChatInterfaceProps) {
 						>
 							Seoul<span className="text-seoul-blue">Mate</span>
 						</h2>
-						<p className="mb-8 max-w-sm text-center text-sm text-text-secondary">
-							Your AI assistant for navigating life in Seoul. Ask a question or
-							snap a photo of any Korean document.
+						<p className="mb-6 max-w-sm text-center text-sm text-text-secondary">
+							{t(language, "welcome.subtitle")}
 						</p>
+
+						{/* Camera CTA */}
+						<button
+							type="button"
+							onClick={() => ctaFileInputRef.current?.click()}
+							className="mb-2 flex items-center gap-2 rounded-[16px] bg-seoul-blue px-6 py-3 text-base font-semibold text-white shadow-[0_0_24px_rgba(37,99,235,0.3)] transition-all hover:brightness-110"
+						>
+							{t(language, "welcome.cta")}
+						</button>
+						<p className="mb-8 text-xs text-text-tertiary">
+							{t(language, "welcome.cta.sub")}
+						</p>
+						<input
+							ref={ctaFileInputRef}
+							type="file"
+							accept="image/*"
+							capture="environment"
+							onChange={handleCtaImage}
+							className="hidden"
+						/>
 
 						{/* Quick guides */}
 						<div className="grid w-full max-w-sm grid-cols-2 gap-2 sm:grid-cols-3">
 							{QUICK_GUIDES.map((guide) => (
 								<button
 									type="button"
-									key={guide.label}
+									key={guide.i18nKey}
 									onClick={() => handleQuickGuide(guide.question)}
-									className="flex flex-col items-center gap-1.5 rounded-[12px] border border-subtle bg-surface p-3 text-center transition-all hover:border-seoul-blue hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)]"
+									className="flex flex-col items-center gap-1.5 rounded-[12px] border border-subtle bg-surface p-3 text-center transition-all hover:border-hanok-coral hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)]"
 								>
 									<span className="text-2xl">{guide.emoji}</span>
 									<span className="text-xs font-medium text-text-secondary">
-										{guide.label}
+										{t(language, guide.i18nKey)}
 									</span>
 								</button>
 							))}
 						</div>
+
+						{/* Disclaimer */}
+						<p className="mt-8 max-w-sm text-center text-xs text-text-tertiary">
+							{t(language, "disclaimer")}
+						</p>
 					</div>
 				) : (
 					<div className="py-4">
@@ -181,6 +228,7 @@ export default function ChatInterface({ language }: ChatInterfaceProps) {
 								role={msg.role}
 								text={msg.text}
 								image={msg.image}
+								language={language}
 								isStreaming={msg.role === "assistant" && !msg.text && isLoading}
 							/>
 						))}
@@ -190,7 +238,7 @@ export default function ChatInterface({ language }: ChatInterfaceProps) {
 			</div>
 
 			{/* Input */}
-			<ChatInput onSend={handleSend} disabled={isLoading} />
+			<ChatInput onSend={handleSend} disabled={isLoading} language={language} />
 		</div>
 	);
 }

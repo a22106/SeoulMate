@@ -1,0 +1,21 @@
+# 로컬 개발 전용. Production에서는 VM의 기존 PostgreSQL(localhost:5432) 사용.
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "27361:5432"
+    environment:
+      POSTGRES_DB: seoulmate
+      POSTGRES_USER: seoulmate
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-seoulmate_dev}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U seoulmate -d seoulmate"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

@@ -1,9 +1,20 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from routers import chat, health
+from services.database import close_pool, init_pool
 
-app = FastAPI(title="SeoulMate API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_pool()
+    yield
+    await close_pool()
+
+
+app = FastAPI(title="SeoulMate API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,9 +1,13 @@
 "use client";
 
+import { useCallback, useState } from "react";
+import { t } from "@/lib/i18n";
+
 interface MessageBubbleProps {
 	role: "user" | "assistant";
 	text: string;
 	image?: string;
+	language: string;
 	isStreaming?: boolean;
 }
 
@@ -57,13 +61,21 @@ export default function MessageBubble({
 	role,
 	text,
 	image,
+	language,
 	isStreaming,
 }: MessageBubbleProps) {
 	const isUser = role === "user";
+	const [copied, setCopied] = useState(false);
+
+	const handleCopy = useCallback(() => {
+		navigator.clipboard.writeText(text);
+		setCopied(true);
+		setTimeout(() => setCopied(false), 1500);
+	}, [text]);
 
 	return (
 		<div
-			className={`flex ${isUser ? "justify-end" : "justify-start"} mb-3 px-4`}
+			className={`animate-message-in flex ${isUser ? "justify-end" : "justify-start"} mb-3 px-4`}
 		>
 			<div
 				className={`max-w-[85%] sm:max-w-[75%] ${
@@ -87,10 +99,19 @@ export default function MessageBubble({
 							{text}
 						</p>
 					) : text ? (
-						<div
-							className="ai-markdown text-[15px] leading-relaxed"
-							dangerouslySetInnerHTML={{ __html: renderMarkdown(text) }}
-						/>
+						<>
+							<div
+								className="ai-markdown text-[15px] leading-relaxed"
+								dangerouslySetInnerHTML={{ __html: renderMarkdown(text) }}
+							/>
+							<button
+								type="button"
+								onClick={handleCopy}
+								className="mt-1.5 text-xs text-text-tertiary transition-colors hover:text-text-secondary"
+							>
+								{copied ? t(language, "copied") : t(language, "copy")}
+							</button>
+						</>
 					) : isStreaming ? (
 						<div className="flex items-center gap-1 py-1">
 							<span className="h-2 w-2 animate-bounce rounded-full bg-text-tertiary [animation-delay:0ms]" />

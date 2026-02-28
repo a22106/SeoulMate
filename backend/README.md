@@ -8,6 +8,7 @@ Gemini 멀티모달 API를 활용한 문서 해석 + 생활 상담 채팅 기능
 - **Framework**: FastAPI
 - **AI Model**: Gemini 2.5 Flash (`gemini-3-flash-preview`)
 - **Search**: Google Search Grounding (실시간 행정 정보)
+- **Database**: PostgreSQL 16 + psycopg (async connection pool)
 - **Package Manager**: uv
 
 ## Quick Start
@@ -18,7 +19,10 @@ uv sync
 
 # 환경 변수 설정
 cp .env.example .env
-# .env 파일에 GEMINI_API_KEY 입력
+# .env 파일에 GEMINI_API_KEY, DATABASE_URL 입력
+
+# PostgreSQL 실행 (로컬 개발, 프로젝트 루트에서)
+docker compose up -d
 
 # 개발 서버 실행
 uv run uvicorn main:app --reload
@@ -61,18 +65,19 @@ data: [DONE]
 
 ### `GET /health`
 
-헬스 체크. `{"status": "ok"}` 반환.
+헬스 체크. DB 연결 확인 포함. `{"status": "ok", "db": "connected"}` 반환.
 
 ## Project Structure
 
 ```
 backend/
-├── main.py              # FastAPI 앱, CORS, 라우터 등록
+├── main.py              # FastAPI 앱, lifespan(DB pool), CORS, 라우터 등록
 ├── routers/
 │   ├── chat.py          # POST /api/chat
-│   └── health.py        # GET /health
+│   └── health.py        # GET /health (DB 연결 확인)
 ├── services/
-│   └── gemini.py        # Gemini API 호출, 프롬프트, 스트리밍
+│   ├── gemini.py        # Gemini API 호출, 프롬프트, 스트리밍
+│   └── database.py      # PostgreSQL 비동기 커넥션 풀
 ├── schemas/
 │   └── chat.py          # ChatRequest, HistoryMessage
 ├── tests/
@@ -91,3 +96,18 @@ uv run pytest
 | 변수             | 설명                                      |
 | ---------------- | ----------------------------------------- |
 | `GEMINI_API_KEY` | Google AI Studio에서 발급한 Gemini API 키 |
+| `DATABASE_URL`   | PostgreSQL 접속 URL (필수)                |
+
+로컬 개발:
+
+```
+DATABASE_URL=postgresql://seoulmate:seoulmate_dev@localhost:27361/seoulmate
+```
+
+Production (VM):
+
+```
+DATABASE_URL=postgresql://seoulmate:<password>@localhost:5432/seoulmate
+```
+
+DB 셋업에 대한 자세한 내용은 [`db/README.md`](../db/README.md) 참고.

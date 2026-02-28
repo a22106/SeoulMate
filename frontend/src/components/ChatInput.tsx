@@ -1,13 +1,19 @@
 "use client";
 
 import { type KeyboardEvent, useCallback, useRef, useState } from "react";
+import { t } from "@/lib/i18n";
 
 interface ChatInputProps {
 	onSend: (message: string, image?: string) => void;
 	disabled: boolean;
+	language: string;
 }
 
-export default function ChatInput({ onSend, disabled }: ChatInputProps) {
+export default function ChatInput({
+	onSend,
+	disabled,
+	language,
+}: ChatInputProps) {
 	const [text, setText] = useState("");
 	const [imagePreview, setImagePreview] = useState<string | null>(null);
 	const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -112,7 +118,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
 					onChange={(e) => setText(e.target.value)}
 					onInput={handleInput}
 					onKeyDown={handleKeyDown}
-					placeholder="Ask about life in Seoul..."
+					placeholder={t(language, "input.placeholder")}
 					disabled={disabled}
 					rows={1}
 					className="max-h-[120px] min-h-[40px] flex-1 resize-none rounded-[20px] border border-subtle bg-background px-4 py-2.5 text-[15px] text-foreground outline-none transition-colors placeholder:text-text-tertiary focus:border-seoul-blue disabled:opacity-50"
