@@ -65,7 +65,11 @@ export default function ChatPage() {
 				onNewChat={handleNewChat}
 				onSOS={() => setShowSOS(true)}
 				onHistory={() => setShowHistory(true)}
-				onDemo={() => router.push("/demo")}
+				onDemo={
+					process.env.NEXT_PUBLIC_ENABLE_DEMO === "true"
+						? () => router.push("/demo")
+						: undefined
+				}
 			/>
 			<ChatInterface
 				language={language}
