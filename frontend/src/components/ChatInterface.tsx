@@ -111,12 +111,16 @@ interface ChatInterfaceProps {
 	language: string;
 	conversationId?: string;
 	enableVoice?: boolean;
+	initialMessage?: string;
+	initialAttachment?: Attachment;
 }
 
 export default function ChatInterface({
 	language,
 	conversationId,
 	enableVoice,
+	initialMessage,
+	initialAttachment,
 }: ChatInterfaceProps) {
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
@@ -162,6 +166,8 @@ export default function ChatInterface({
 			cancelled = true;
 		};
 	}, [conversationId]);
+
+	const initialSentRef = useRef(false);
 
 	const handleSend = useCallback(
 		async (text: string, attachment?: Attachment) => {
@@ -257,6 +263,15 @@ export default function ChatInterface({
 
 	const handleStop = useCallback(() => {
 		abortRef.current?.abort();
+	}, []);
+
+	// Auto-send initial message (for demo page)
+	// biome-ignore lint/correctness/useExhaustiveDependencies: fire once on mount
+	useEffect(() => {
+		if (initialMessage && !initialSentRef.current) {
+			initialSentRef.current = true;
+			handleSend(initialMessage, initialAttachment);
+		}
 	}, []);
 
 	const handleQuickGuide = useCallback(

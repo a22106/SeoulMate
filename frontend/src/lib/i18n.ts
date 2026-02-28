@@ -46,6 +46,7 @@ const translations: Record<string, Record<string, string>> = {
 		"sos.hospital.allergy": "I have allergies.",
 		"sos.hospital.medication": "I'm taking medication.",
 		stop: "Stop",
+		demo: "Demo",
 	},
 	한국어: {
 		"welcome.subtitle":
@@ -94,6 +95,7 @@ const translations: Record<string, Record<string, string>> = {
 		"sos.hospital.allergy": "알레르기가 있습니다.",
 		"sos.hospital.medication": "약을 먹고 있습니다.",
 		stop: "중지",
+		demo: "데모",
 	},
 	中文: {
 		"welcome.subtitle":
@@ -141,6 +143,7 @@ const translations: Record<string, Record<string, string>> = {
 		"sos.hospital.allergy": "我有过敏症。",
 		"sos.hospital.medication": "我正在服药。",
 		stop: "停止",
+		demo: "演示",
 	},
 	"Tiếng Việt": {
 		"welcome.subtitle":
@@ -190,6 +193,7 @@ const translations: Record<string, Record<string, string>> = {
 		"sos.hospital.allergy": "Tôi bị dị ứng.",
 		"sos.hospital.medication": "Tôi đang uống thuốc.",
 		stop: "Dừng",
+		demo: "Demo",
 	},
 	日本語: {
 		"welcome.subtitle":
@@ -238,6 +242,7 @@ const translations: Record<string, Record<string, string>> = {
 		"sos.hospital.allergy": "アレルギーがあります。",
 		"sos.hospital.medication": "薬を飲んでいます。",
 		stop: "停止",
+		demo: "デモ",
 	},
 };
 

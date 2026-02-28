@@ -25,6 +25,7 @@ export default function Home() {
 				onNewChat={handleNewChat}
 				onSOS={() => setShowSOS(true)}
 				onHistory={() => setShowHistory(true)}
+				onDemo={() => router.push("/demo")}
 			/>
 			<ChatInterface language={language} />
 			{showSOS && (

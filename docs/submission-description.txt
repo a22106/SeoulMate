@@ -1,0 +1,16 @@
+SeoulMate — Your AI Survival Guide for Life in Seoul
+
+Over 400,000 foreign residents in Seoul face daily struggles that go far beyond language — incomprehensible lease contracts, confusing recycling rules that vary by district, opaque visa procedures, and utility bills they can't act on. Existing solutions like translation apps only convert words; they don't explain what a document means or what you should do about it.
+
+SeoulMate is an AI agent that turns a single photo or question into instant, actionable guidance. Snap a photo of a Korean lease agreement, and SeoulMate doesn't just translate it — it identifies the document type, highlights critical clauses (like unusual deposit return conditions), and walks you through step-by-step actions with relevant warnings. Ask "How do I sort recycling in Gangnam?" and it pulls real-time, district-specific rules via Google Search Grounding.
+
+Key Features:
+- Photo-based document interpretation — Gemini's multimodal vision analyzes contracts, utility bills, delivery notices, and signs with full contextual explanation, not just translation
+- Conversational Q&A with Google Search Grounding — Real-time answers on visas, healthcare, banking, and daily life, backed by up-to-date web sources
+- Real-time voice conversation — Hands-free help via Gemini Live API with bidirectional audio streaming
+- SOS emergency mode — Offline-ready emergency scripts with Korean phrases, romanized pronunciation, and one-tap calling for police (112), fire (119), and hospitals (1339)
+- 5-language support — English, Korean, Chinese, Vietnamese, and Japanese
+
+Gemini API Usage: Gemini 3 Flash (multimodal streaming chat + vision), Google Search Grounding (real-time info), Gemini Live API (native audio for voice conversations)
+
+Track: Gemini for Social Good — Bridging the information gap for Seoul's most vulnerable non-Korean-speaking residents, turning everyday survival from stressful to simple.
