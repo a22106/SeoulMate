@@ -14,6 +14,13 @@ logger = logging.getLogger(__name__)
 
 SSE_HEADERS = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
 
+_EXHAUSTED = object()
+
+
+def _next_chunk(gen):
+    """Wrapper around next() that returns a sentinel instead of raising StopIteration."""
+    return next(gen, _EXHAUSTED)
+
 
 async def _stream_and_persist(req: ChatRequest):
     """Wrap the sync SSE generator, accumulate full response, then persist."""
@@ -21,9 +28,8 @@ async def _stream_and_persist(req: ChatRequest):
     gen = stream_chat(req)
     try:
         while True:
-            try:
-                chunk = await asyncio.to_thread(next, gen)
-            except StopIteration:
+            chunk = await asyncio.to_thread(_next_chunk, gen)
+            if chunk is _EXHAUSTED:
                 break
             yield chunk
             # Extract text content from SSE data lines (skip [DONE])

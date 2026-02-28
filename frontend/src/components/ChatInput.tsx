@@ -19,6 +19,7 @@ export interface Attachment {
 
 interface ChatInputProps {
 	onSend: (message: string, attachment?: Attachment) => void;
+	onStop?: () => void;
 	disabled: boolean;
 	language: string;
 	enableVoice?: boolean;
@@ -40,6 +41,7 @@ function fileIcon(mime: string) {
 
 export default function ChatInput({
 	onSend,
+	onStop,
 	disabled,
 	language,
 	enableVoice,
@@ -317,29 +319,49 @@ export default function ChatInput({
 					</button>
 				)}
 
-				{/* Send button */}
-				<button
-					type="button"
-					onClick={handleSend}
-					disabled={isDisabled || (!text.trim() && !attachment)}
-					className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-seoul-blue text-white shadow-[0_0_24px_rgba(37,99,235,0.3)] transition-all hover:brightness-110 disabled:opacity-40 disabled:shadow-none"
-				>
-					<svg
-						width="18"
-						height="18"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="2.5"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						aria-label="Send"
-						role="img"
+				{/* Send / Stop button */}
+				{disabled && onStop ? (
+					<button
+						type="button"
+						onClick={onStop}
+						className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-danger text-white transition-all hover:brightness-110"
+						aria-label={t(language, "stop")}
 					>
-						<path d="M22 2L11 13" />
-						<path d="M22 2L15 22L11 13L2 9L22 2Z" />
-					</svg>
-				</button>
+						<svg
+							width="14"
+							height="14"
+							viewBox="0 0 14 14"
+							fill="currentColor"
+							role="img"
+							aria-label="Stop"
+						>
+							<rect width="14" height="14" rx="2" />
+						</svg>
+					</button>
+				) : (
+					<button
+						type="button"
+						onClick={handleSend}
+						disabled={isDisabled || (!text.trim() && !attachment)}
+						className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-seoul-blue text-white shadow-[0_0_24px_rgba(37,99,235,0.3)] transition-all hover:brightness-110 disabled:opacity-40 disabled:shadow-none"
+					>
+						<svg
+							width="18"
+							height="18"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2.5"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							aria-label="Send"
+							role="img"
+						>
+							<path d="M22 2L11 13" />
+							<path d="M22 2L15 22L11 13L2 9L22 2Z" />
+						</svg>
+					</button>
+				)}
 			</div>
 		</div>
 	);

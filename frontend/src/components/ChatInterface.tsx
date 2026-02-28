@@ -1,7 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+	type MutableRefObject,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import {
 	type ChatMessage,
 	createConversation,
@@ -121,6 +127,7 @@ export default function ChatInterface({
 	const [selectedCategory, setSelectedCategory] = useState(0);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const ctaFileInputRef = useRef<HTMLInputElement>(null);
+	const abortRef: MutableRefObject<AbortController | null> = useRef(null);
 
 	const scrollToBottom = useCallback(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -206,6 +213,9 @@ export default function ChatInterface({
 				}
 			}
 
+			const controller = new AbortController();
+			abortRef.current = controller;
+
 			sendChatMessage(
 				{
 					message: text,
@@ -226,10 +236,12 @@ export default function ChatInterface({
 				},
 				// onDone
 				() => {
+					abortRef.current = null;
 					setIsLoading(false);
 				},
 				// onError
 				(err) => {
+					abortRef.current = null;
 					setMessages((prev) =>
 						prev.map((m) =>
 							m.id === assistantId
@@ -239,10 +251,15 @@ export default function ChatInterface({
 					);
 					setIsLoading(false);
 				},
+				controller.signal,
 			);
 		},
 		[isLoading, messages, language, convId, router.replace],
 	);
+
+	const handleStop = useCallback(() => {
+		abortRef.current?.abort();
+	}, []);
 
 	const handleQuickGuide = useCallback(
 		(question: string) => {
@@ -403,6 +420,7 @@ export default function ChatInterface({
 			{/* Input */}
 			<ChatInput
 				onSend={handleSend}
+				onStop={handleStop}
 				disabled={isLoading}
 				language={language}
 				enableVoice={enableVoice}

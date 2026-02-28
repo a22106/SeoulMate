@@ -45,6 +45,7 @@ const translations: Record<string, Record<string, string>> = {
 		"sos.hospital.pain": "It hurts here.",
 		"sos.hospital.allergy": "I have allergies.",
 		"sos.hospital.medication": "I'm taking medication.",
+		stop: "Stop",
 	},
 	한국어: {
 		"welcome.subtitle":
@@ -92,6 +93,7 @@ const translations: Record<string, Record<string, string>> = {
 		"sos.hospital.pain": "여기가 아파요.",
 		"sos.hospital.allergy": "알레르기가 있습니다.",
 		"sos.hospital.medication": "약을 먹고 있습니다.",
+		stop: "중지",
 	},
 	中文: {
 		"welcome.subtitle":
@@ -138,6 +140,7 @@ const translations: Record<string, Record<string, string>> = {
 		"sos.hospital.pain": "这里疼。",
 		"sos.hospital.allergy": "我有过敏症。",
 		"sos.hospital.medication": "我正在服药。",
+		stop: "停止",
 	},
 	"Tiếng Việt": {
 		"welcome.subtitle":
@@ -186,6 +189,7 @@ const translations: Record<string, Record<string, string>> = {
 		"sos.hospital.pain": "Chỗ này đau.",
 		"sos.hospital.allergy": "Tôi bị dị ứng.",
 		"sos.hospital.medication": "Tôi đang uống thuốc.",
+		stop: "Dừng",
 	},
 	日本語: {
 		"welcome.subtitle":
@@ -233,6 +237,7 @@ const translations: Record<string, Record<string, string>> = {
 		"sos.hospital.pain": "ここが痛いです。",
 		"sos.hospital.allergy": "アレルギーがあります。",
 		"sos.hospital.medication": "薬を飲んでいます。",
+		stop: "停止",
 	},
 };
 

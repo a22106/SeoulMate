@@ -16,7 +16,13 @@ export default function ChatPage() {
 	const [showHistory, setShowHistory] = useState(false);
 	const [valid, setValid] = useState<boolean | null>(null);
 
+	const isNew = params.id === "new";
+
 	useEffect(() => {
+		if (isNew) {
+			setValid(true);
+			return;
+		}
 		let cancelled = false;
 		(async () => {
 			try {
@@ -33,11 +39,15 @@ export default function ChatPage() {
 		return () => {
 			cancelled = true;
 		};
-	}, [params.id, router]);
+	}, [params.id, isNew, router]);
 
 	const handleNewChat = useCallback(() => {
-		router.push("/");
-	}, [router]);
+		if (isNew) {
+			window.location.href = "/chat/new";
+		} else {
+			router.push("/chat/new");
+		}
+	}, [isNew, router]);
 
 	if (valid === null) {
 		return (
@@ -58,7 +68,7 @@ export default function ChatPage() {
 			/>
 			<ChatInterface
 				language={language}
-				conversationId={params.id}
+				conversationId={isNew ? undefined : params.id}
 				enableVoice
 			/>
 			{showSOS && (

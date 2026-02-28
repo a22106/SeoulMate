@@ -14,7 +14,7 @@ export default function Home() {
 	const router = useRouter();
 
 	const handleNewChat = useCallback(() => {
-		router.push("/");
+		router.push("/chat/new");
 	}, [router]);
 
 	return (

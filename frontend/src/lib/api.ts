@@ -100,12 +100,14 @@ export async function sendChatMessage(
 	onChunk: (text: string) => void,
 	onDone: () => void,
 	onError: (err: Error) => void,
+	signal?: AbortSignal,
 ) {
 	try {
 		const res = await fetch(`${API_URL}/api/chat`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(req),
+			signal,
 		});
 
 		if (!res.ok) {
@@ -146,6 +148,10 @@ export async function sendChatMessage(
 		}
 		onDone();
 	} catch (err) {
+		if (err instanceof DOMException && err.name === "AbortError") {
+			onDone();
+			return;
+		}
 		onError(err instanceof Error ? err : new Error(String(err)));
 	}
 }
