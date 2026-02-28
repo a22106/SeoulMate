@@ -1,60 +1,82 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #FAFBFD;
-  --color-foreground: #0F172A;
-  --color-seoul-blue: #2563EB;
-  --color-hanok-coral: #F97316;
-  --color-surface: #FFFFFF;
-  --color-subtle: #F1F5F9;
-  --color-hover: #E2E8F0;
-  --color-text-secondary: #475569;
-  --color-text-tertiary: #94A3B8;
-  --color-danger: #EF4444;
-  --font-outfit: "Outfit", sans-serif;
-  --font-pretendard: "Pretendard Variable", "Pretendard", system-ui, sans-serif;
+	--color-background: #fafbfd;
+	--color-foreground: #0f172a;
+	--color-seoul-blue: #2563eb;
+	--color-hanok-coral: #f97316;
+	--color-surface: #ffffff;
+	--color-subtle: #f1f5f9;
+	--color-hover: #e2e8f0;
+	--color-text-secondary: #475569;
+	--color-text-tertiary: #94a3b8;
+	--color-danger: #ef4444;
+	--font-outfit: "Outfit", sans-serif;
+	--font-pretendard: "Pretendard Variable", "Pretendard", system-ui, sans-serif;
 }
 
 body {
-  background: var(--color-background);
-  color: var(--color-foreground);
-  font-family: var(--font-pretendard);
+	background: var(--color-background);
+	color: var(--color-foreground);
+	font-family: var(--font-pretendard);
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 4px;
+	width: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+	background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
-  border-radius: 9999px;
+	background: #cbd5e1;
+	border-radius: 9999px;
 }
 
 /* Markdown in AI messages */
-.ai-markdown h1, .ai-markdown h2, .ai-markdown h3 {
-  font-weight: 700;
-  margin-top: 0.75em;
-  margin-bottom: 0.25em;
+.ai-markdown h1,
+.ai-markdown h2,
+.ai-markdown h3 {
+	font-weight: 700;
+	margin-top: 0.75em;
+	margin-bottom: 0.25em;
 }
-.ai-markdown h1 { font-size: 1.25rem; }
-.ai-markdown h2 { font-size: 1.125rem; }
-.ai-markdown h3 { font-size: 1rem; }
-.ai-markdown p { margin-bottom: 0.5em; }
-.ai-markdown ul, .ai-markdown ol { margin-left: 1.25em; margin-bottom: 0.5em; }
-.ai-markdown ul { list-style: disc; }
-.ai-markdown ol { list-style: decimal; }
-.ai-markdown li { margin-bottom: 0.25em; }
-.ai-markdown strong { font-weight: 700; }
+.ai-markdown h1 {
+	font-size: 1.25rem;
+}
+.ai-markdown h2 {
+	font-size: 1.125rem;
+}
+.ai-markdown h3 {
+	font-size: 1rem;
+}
+.ai-markdown p {
+	margin-bottom: 0.5em;
+}
+.ai-markdown ul,
+.ai-markdown ol {
+	margin-left: 1.25em;
+	margin-bottom: 0.5em;
+}
+.ai-markdown ul {
+	list-style: disc;
+}
+.ai-markdown ol {
+	list-style: decimal;
+}
+.ai-markdown li {
+	margin-bottom: 0.25em;
+}
+.ai-markdown strong {
+	font-weight: 700;
+}
 .ai-markdown code {
-  background: #E2E8F0;
-  padding: 0.1em 0.3em;
-  border-radius: 4px;
-  font-size: 0.875em;
+	background: #e2e8f0;
+	padding: 0.1em 0.3em;
+	border-radius: 4px;
+	font-size: 0.875em;
 }
 .ai-markdown a {
-  color: #2563EB;
-  text-decoration: underline;
+	color: #2563eb;
+	text-decoration: underline;
 }
