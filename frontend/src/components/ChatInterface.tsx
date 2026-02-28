@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import {
 	type MutableRefObject,
 	useCallback,
@@ -119,7 +118,6 @@ export default function ChatInterface({
 	conversationId,
 	enableVoice,
 }: ChatInterfaceProps) {
-	const router = useRouter();
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isLoadingHistory, setIsLoadingHistory] = useState(!!conversationId);
@@ -207,7 +205,7 @@ export default function ChatInterface({
 					const conv = await createConversation(language);
 					activeConvId = conv.id;
 					setConvId(activeConvId);
-					router.replace(`/chat/${activeConvId}`);
+					window.history.replaceState(null, "", `/chat/${activeConvId}`);
 				} catch {
 					// Continue without persistence if creation fails
 				}
@@ -254,7 +252,7 @@ export default function ChatInterface({
 				controller.signal,
 			);
 		},
-		[isLoading, messages, language, convId, router.replace],
+		[isLoading, messages, language, convId],
 	);
 
 	const handleStop = useCallback(() => {
