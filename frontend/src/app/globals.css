@@ -53,6 +53,9 @@ body {
 .ai-markdown p {
 	margin-bottom: 0.5em;
 }
+.ai-markdown p:last-child {
+	margin-bottom: 0;
+}
 .ai-markdown ul,
 .ai-markdown ol {
 	margin-left: 1.25em;
@@ -70,15 +73,95 @@ body {
 .ai-markdown strong {
 	font-weight: 700;
 }
+.ai-markdown em {
+	font-style: italic;
+}
 .ai-markdown code {
 	background: #e2e8f0;
 	padding: 0.1em 0.3em;
 	border-radius: 4px;
 	font-size: 0.875em;
+	font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+.ai-markdown .code-block {
+	margin: 0.5em 0;
+	border-radius: 8px;
+	overflow: hidden;
+	background: #1e293b;
+}
+.ai-markdown .code-block pre {
+	padding: 0.75em 1em;
+	overflow-x: auto;
+	margin: 0;
+}
+.ai-markdown .code-block code {
+	background: none;
+	padding: 0;
+	border-radius: 0;
+	color: #e2e8f0;
+	font-size: 0.8125em;
+	font-family: "JetBrains Mono", ui-monospace, monospace;
+	line-height: 1.6;
+}
+.ai-markdown blockquote {
+	border-left: 3px solid #2563eb;
+	padding-left: 0.75em;
+	margin: 0.5em 0;
+	color: #475569;
+}
+.ai-markdown hr {
+	border: none;
+	border-top: 1px solid #e2e8f0;
+	margin: 0.75em 0;
+}
+.ai-markdown .table-wrap {
+	overflow-x: auto;
+	margin: 0.5em 0;
+	border-radius: 8px;
+	border: 1px solid #cbd5e1;
+}
+.ai-markdown table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.875em;
+}
+.ai-markdown thead th {
+	background: #e2e8f0;
+	font-weight: 600;
+	padding: 0.5em 0.75em;
+	border-bottom: 2px solid #cbd5e1;
+	white-space: nowrap;
+}
+.ai-markdown tbody td {
+	padding: 0.5em 0.75em;
+	border-bottom: 1px solid #cbd5e1;
+}
+.ai-markdown tbody tr:last-child td {
+	border-bottom: none;
+}
+.ai-markdown tbody tr:hover {
+	background: #e2e8f0;
 }
 .ai-markdown a {
 	color: #2563eb;
 	text-decoration: underline;
+}
+
+/* Blinking cursor during streaming */
+@keyframes blink-cursor {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0;
+	}
+}
+.ai-markdown.streaming > *:last-child::after {
+	content: "\u258C";
+	animation: blink-cursor 0.8s step-end infinite;
+	color: var(--color-seoul-blue);
+	margin-left: 1px;
 }
 
 @keyframes message-in {

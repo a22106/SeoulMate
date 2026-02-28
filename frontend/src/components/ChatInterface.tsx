@@ -7,8 +7,10 @@ import {
 	createConversation,
 	getConversation,
 	sendChatMessage,
+	uploadFile,
 } from "@/lib/api";
 import { t } from "@/lib/i18n";
+import type { Attachment } from "./ChatInput";
 import ChatInput from "./ChatInput";
 import MessageBubble from "./MessageBubble";
 
@@ -17,7 +19,49 @@ interface Message {
 	role: "user" | "assistant";
 	text: string;
 	image?: string;
+	file_url?: string;
+	file_mime_type?: string;
+	file_name?: string;
 }
+
+const DOCUMENT_CATEGORIES = [
+	{
+		i18nKey: "doc.lease",
+		icon: "🏠",
+		prompt:
+			"I'm uploading a Korean housing lease/rental contract (전세 or 월세 계약서). Please analyze the key terms, important clauses, potential risks, and anything I should be careful about as a foreign tenant.",
+	},
+	{
+		i18nKey: "doc.employment",
+		icon: "💼",
+		prompt:
+			"I'm uploading a Korean employment contract (근로계약서). Please analyze the key terms including salary, working hours, benefits, and anything I should watch out for as a foreign worker.",
+	},
+	{
+		i18nKey: "doc.bill",
+		icon: "🧾",
+		prompt:
+			"I'm uploading a Korean utility bill or tax notice (공과금/세금 고지서). Please explain what this bill is for, the amount due, payment deadline, and how to pay it.",
+	},
+	{
+		i18nKey: "doc.government",
+		icon: "🏛️",
+		prompt:
+			"I'm uploading an official Korean government document or notice (관공서 서류). Please explain what this document says, what action I need to take, and any deadlines.",
+	},
+	{
+		i18nKey: "doc.medical",
+		icon: "🏥",
+		prompt:
+			"I'm uploading a Korean medical or insurance document (의료/보험 서류). Please explain the diagnosis, treatment, costs, and any follow-up actions needed.",
+	},
+	{
+		i18nKey: "doc.other",
+		icon: "📄",
+		prompt:
+			"I'm uploading a Korean document. Please analyze and explain what this document is about, the key information, and any actions I need to take.",
+	},
+];
 
 const QUICK_GUIDES = [
 	{
@@ -74,6 +118,7 @@ export default function ChatInterface({
 	const [isLoading, setIsLoading] = useState(false);
 	const [isLoadingHistory, setIsLoadingHistory] = useState(!!conversationId);
 	const [convId, setConvId] = useState<string | undefined>(conversationId);
+	const [selectedCategory, setSelectedCategory] = useState(0);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const ctaFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -114,10 +159,41 @@ export default function ChatInterface({
 	}, [conversationId]);
 
 	const handleSend = useCallback(
-		async (text: string, image?: string) => {
+		async (text: string, attachment?: Attachment) => {
 			if (isLoading) return;
 
-			// Create conversation on first message if needed
+			// Build history from current messages BEFORE state update
+			const history: ChatMessage[] = messages.map((m) => ({
+				role: m.role,
+				text: m.text,
+				file_url: m.file_url,
+				file_mime_type: m.file_mime_type,
+			}));
+
+			const userMsg: Message = {
+				id: Date.now().toString(),
+				role: "user",
+				text,
+				image: attachment?.image
+					? `data:image/jpeg;base64,${attachment.image}`
+					: undefined,
+				file_url: attachment?.file_url,
+				file_mime_type: attachment?.file_mime_type,
+				file_name: attachment?.file_name,
+			};
+
+			const assistantId = (Date.now() + 1).toString();
+			const assistantMsg: Message = {
+				id: assistantId,
+				role: "assistant",
+				text: "",
+			};
+
+			// Immediate UI feedback: show messages + loading state
+			setMessages((prev) => [...prev, userMsg, assistantMsg]);
+			setIsLoading(true);
+
+			// Create conversation on first message (user already sees typing dots)
 			let activeConvId = convId;
 			if (!activeConvId) {
 				try {
@@ -130,33 +206,12 @@ export default function ChatInterface({
 				}
 			}
 
-			const userMsg: Message = {
-				id: Date.now().toString(),
-				role: "user",
-				text,
-				image: image ? `data:image/jpeg;base64,${image}` : undefined,
-			};
-
-			const assistantId = (Date.now() + 1).toString();
-			const assistantMsg: Message = {
-				id: assistantId,
-				role: "assistant",
-				text: "",
-			};
-
-			setMessages((prev) => [...prev, userMsg, assistantMsg]);
-			setIsLoading(true);
-
-			// Build history from previous messages (exclude current)
-			const history: ChatMessage[] = messages.map((m) => ({
-				role: m.role,
-				text: m.text,
-			}));
-
 			sendChatMessage(
 				{
 					message: text,
-					image,
+					image: attachment?.image,
+					file_url: attachment?.file_url,
+					file_mime_type: attachment?.file_mime_type,
 					language,
 					history,
 					conversation_id: activeConvId,
@@ -196,20 +251,35 @@ export default function ChatInterface({
 		[handleSend],
 	);
 
-	const handleCtaImage = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleCtaFile = useCallback(
+		async (e: React.ChangeEvent<HTMLInputElement>) => {
 			const file = e.target.files?.[0];
 			if (!file) return;
-			const reader = new FileReader();
-			reader.onload = () => {
-				const result = reader.result as string;
-				const base64 = result.split(",")[1];
-				handleSend("What is this?", base64);
-			};
-			reader.readAsDataURL(file);
 			e.target.value = "";
+
+			try {
+				const resp = await uploadFile(file);
+				const att: Attachment = {
+					file_url: resp.file_url,
+					file_mime_type: resp.mime_type,
+					file_name: resp.original_name,
+				};
+				// Include base64 for image display
+				if (file.type.startsWith("image/")) {
+					const reader = new FileReader();
+					reader.onload = () => {
+						att.image = (reader.result as string).split(",")[1];
+						handleSend(DOCUMENT_CATEGORIES[selectedCategory].prompt, att);
+					};
+					reader.readAsDataURL(file);
+				} else {
+					handleSend(DOCUMENT_CATEGORIES[selectedCategory].prompt, att);
+				}
+			} catch {
+				// Upload failed — ignore
+			}
 		},
-		[handleSend],
+		[handleSend, selectedCategory],
 	);
 
 	if (isLoadingHistory) {
@@ -247,6 +317,24 @@ export default function ChatInterface({
 							{t(language, "welcome.subtitle")}
 						</p>
 
+						{/* Document category tabs */}
+						<div className="mb-4 flex w-full max-w-sm flex-wrap justify-center gap-2">
+							{DOCUMENT_CATEGORIES.map((cat, idx) => (
+								<button
+									type="button"
+									key={cat.i18nKey}
+									onClick={() => setSelectedCategory(idx)}
+									className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+										selectedCategory === idx
+											? "border-seoul-blue bg-seoul-blue text-white"
+											: "border-subtle bg-surface text-text-secondary hover:border-seoul-blue/40"
+									}`}
+								>
+									{cat.icon} {t(language, cat.i18nKey)}
+								</button>
+							))}
+						</div>
+
 						{/* Camera CTA */}
 						<button
 							type="button"
@@ -261,9 +349,8 @@ export default function ChatInterface({
 						<input
 							ref={ctaFileInputRef}
 							type="file"
-							accept="image/*"
-							capture="environment"
-							onChange={handleCtaImage}
+							accept="image/*,.pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+							onChange={handleCtaFile}
 							className="hidden"
 						/>
 
@@ -291,14 +378,21 @@ export default function ChatInterface({
 					</div>
 				) : (
 					<div className="py-4">
-						{messages.map((msg) => (
+						{messages.map((msg, idx) => (
 							<MessageBubble
 								key={msg.id}
 								role={msg.role}
 								text={msg.text}
 								image={msg.image}
+								file_url={msg.file_url}
+								file_mime_type={msg.file_mime_type}
+								file_name={msg.file_name}
 								language={language}
-								isStreaming={msg.role === "assistant" && !msg.text && isLoading}
+								isStreaming={
+									msg.role === "assistant" &&
+									isLoading &&
+									idx === messages.length - 1
+								}
 							/>
 						))}
 						<div ref={messagesEndRef} />
@@ -307,7 +401,12 @@ export default function ChatInterface({
 			</div>
 
 			{/* Input */}
-			<ChatInput onSend={handleSend} disabled={isLoading} language={language} enableVoice={enableVoice} />
+			<ChatInput
+				onSend={handleSend}
+				disabled={isLoading}
+				language={language}
+				enableVoice={enableVoice}
+			/>
 		</div>
 	);
 }

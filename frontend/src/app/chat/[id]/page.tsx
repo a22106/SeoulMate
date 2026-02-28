@@ -56,7 +56,11 @@ export default function ChatPage() {
 				onSOS={() => setShowSOS(true)}
 				onHistory={() => setShowHistory(true)}
 			/>
-			<ChatInterface language={language} conversationId={params.id} enableVoice />
+			<ChatInterface
+				language={language}
+				conversationId={params.id}
+				enableVoice
+			/>
 			{showSOS && (
 				<SOSModal language={language} onClose={() => setShowSOS(false)} />
 			)}

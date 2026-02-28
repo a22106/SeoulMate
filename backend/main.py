@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import chat, conversation, health, voice
+from routers import chat, conversation, health, upload, voice
 from services.database import close_pool, init_pool
 
 
@@ -30,4 +30,5 @@ app.add_middleware(
 app.include_router(chat.router)
 app.include_router(conversation.router)
 app.include_router(health.router)
+app.include_router(upload.router)
 app.include_router(voice.router)

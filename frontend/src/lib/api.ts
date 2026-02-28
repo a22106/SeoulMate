@@ -4,14 +4,39 @@ export interface ChatMessage {
 	role: "user" | "assistant";
 	text: string;
 	image?: string;
+	file_url?: string;
+	file_mime_type?: string;
+	file_name?: string;
 }
 
 interface ChatRequest {
 	message: string;
 	image?: string;
+	file_url?: string;
+	file_mime_type?: string;
 	language: string;
 	history: ChatMessage[];
 	conversation_id?: string;
+}
+
+export interface UploadResponse {
+	file_url: string;
+	mime_type: string;
+	original_name: string;
+}
+
+export async function uploadFile(file: File): Promise<UploadResponse> {
+	const formData = new FormData();
+	formData.append("file", file);
+	const res = await fetch(`${API_URL}/api/upload`, {
+		method: "POST",
+		body: formData,
+	});
+	if (!res.ok) {
+		const detail = await res.text();
+		throw new Error(detail || `Upload failed: ${res.status}`);
+	}
+	return res.json();
 }
 
 export interface ConversationResponse {

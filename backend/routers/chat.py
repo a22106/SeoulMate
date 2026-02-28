@@ -1,3 +1,5 @@
+import asyncio
+import json
 import logging
 
 from fastapi import APIRouter
@@ -10,17 +12,22 @@ from services.gemini import stream_chat
 router = APIRouter(prefix="/api")
 logger = logging.getLogger(__name__)
 
+SSE_HEADERS = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+
 
 async def _stream_and_persist(req: ChatRequest):
     """Wrap the sync SSE generator, accumulate full response, then persist."""
     full_text = ""
+    gen = stream_chat(req)
     try:
-        for chunk in stream_chat(req):
+        while True:
+            try:
+                chunk = await asyncio.to_thread(next, gen)
+            except StopIteration:
+                break
             yield chunk
             # Extract text content from SSE data lines (skip [DONE])
             if chunk.startswith("data: {"):
-                import json
-
                 try:
                     parsed = json.loads(chunk[6:].strip())
                     if parsed.get("content"):
@@ -38,7 +45,7 @@ async def _stream_and_persist(req: ChatRequest):
                 req.conversation_id,
                 "user",
                 req.message,
-                image_included=bool(req.image),
+                image_included=bool(req.image or req.file_url),
             )
             await save_message(req.conversation_id, "assistant", full_text)
         except Exception:
@@ -47,8 +54,8 @@ async def _stream_and_persist(req: ChatRequest):
 
 @router.post("/chat")
 async def chat(req: ChatRequest):
-    if req.conversation_id:
-        return StreamingResponse(
-            _stream_and_persist(req), media_type="text/event-stream"
-        )
-    return StreamingResponse(stream_chat(req), media_type="text/event-stream")
+    return StreamingResponse(
+        _stream_and_persist(req),
+        media_type="text/event-stream",
+        headers=SSE_HEADERS,
+    )

@@ -30,7 +30,7 @@ export default function Header({
 			<button
 				type="button"
 				onClick={onNewChat}
-				className="flex items-center gap-2"
+				className="flex cursor-pointer items-center gap-2"
 			>
 				<div className="flex h-8 w-8 items-center justify-center rounded-[12px] bg-seoul-blue text-sm text-white">
 					S
