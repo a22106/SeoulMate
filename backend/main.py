@@ -5,11 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from routers import chat, conversation, health, voice
 from services.database import close_pool, init_pool
-from services.secrets import load_secrets
-
-# dotenv보다 먼저 Secret Manager에서 환경변수를 로드한다.
-# GCP_SECRET_ENV가 설정되어 있으면 Secret Manager 사용, 없으면 기존 .env 방식.
-load_secrets()
 
 
 @asynccontextmanager

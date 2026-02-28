@@ -1,7 +1,10 @@
 from datetime import datetime
-from typing import Optional
+from typing import Annotated
 
-from pydantic import BaseModel
+from pydantic import BaseModel, BeforeValidator
+
+# psycopg returns UUID objects for PostgreSQL UUID columns; coerce to str
+StrFromUUID = Annotated[str, BeforeValidator(lambda v: str(v))]
 
 
 class ConversationCreate(BaseModel):
@@ -9,15 +12,15 @@ class ConversationCreate(BaseModel):
 
 
 class ConversationResponse(BaseModel):
-    id: str
+    id: StrFromUUID
     language: str
     created_at: datetime
     updated_at: datetime
 
 
 class MessageResponse(BaseModel):
-    id: str
-    conversation_id: str
+    id: StrFromUUID
+    conversation_id: StrFromUUID
     role: str
     text: str
     image_included: bool

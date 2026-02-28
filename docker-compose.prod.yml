@@ -5,12 +5,8 @@ services:
     restart: unless-stopped
     ports:
       - "30002:8000"
-    environment:
-      - GCP_SECRET_ENV=buoyant-sunbeam-466409-e7/seoulmate-env
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/adc.json
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/seoulmate
-    volumes:
-      - ~/.config/gcloud/application_default_credentials.json:/app/adc.json:ro
+    env_file:
+      - ./backend/.env.prod
     networks:
       - postgres_default
     healthcheck:
