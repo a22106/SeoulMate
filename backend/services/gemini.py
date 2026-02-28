@@ -34,6 +34,12 @@ Be warm, practical, and reassuring. Living abroad is stressful — make it easie
 
 
 def _get_client() -> genai.Client:
+    if os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "").lower() == "true":
+        return genai.Client(
+            vertexai=True,
+            project=os.getenv("GOOGLE_CLOUD_PROJECT"),
+            location=os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1"),
+        )
     return genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 

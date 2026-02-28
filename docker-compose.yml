@@ -3,7 +3,7 @@ services:
   postgres:
     image: postgres:16-alpine
     ports:
-      - "27361:5432"
+      - "5432:5432"
     environment:
       POSTGRES_DB: seoulmate
       POSTGRES_USER: seoulmate

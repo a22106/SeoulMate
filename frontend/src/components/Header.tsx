@@ -14,12 +14,14 @@ interface HeaderProps {
 	language: string;
 	onLanguageChange: (lang: string) => void;
 	onNewChat: () => void;
+	onSOS: () => void;
 }
 
 export default function Header({
 	language,
 	onLanguageChange,
 	onNewChat,
+	onSOS,
 }: HeaderProps) {
 	return (
 		<header className="flex shrink-0 items-center justify-between border-b border-subtle bg-surface px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
@@ -42,6 +44,13 @@ export default function Header({
 					className="rounded-[6px] border border-subtle bg-surface px-2.5 py-1.5 text-sm font-medium text-text-secondary transition-colors hover:bg-hover"
 				>
 					{t(language, "newChat")}
+				</button>
+				<button
+					type="button"
+					onClick={onSOS}
+					className="rounded-[6px] bg-red-600 px-2.5 py-1.5 text-sm font-bold text-white transition-colors hover:bg-red-700"
+				>
+					🚨 SOS
 				</button>
 				<select
 					value={language}

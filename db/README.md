@@ -15,7 +15,7 @@ docker compose exec postgres psql -U seoulmate -d seoulmate -c '\dt'
 ```
 
 - **Host**: `localhost`
-- **Port**: `27361`
+- **Port**: `5432`
 - **Database**: `seoulmate`
 - **User**: `seoulmate`
 - **Password**: `seoulmate_dev`
@@ -23,7 +23,7 @@ docker compose exec postgres psql -U seoulmate -d seoulmate -c '\dt'
 `backend/.env`:
 
 ```
-DATABASE_URL=postgresql://seoulmate:seoulmate_dev@localhost:27361/seoulmate
+DATABASE_URL=postgresql://seoulmate:seoulmate_dev@localhost:5432/seoulmate
 ```
 
 ## Production 환경 (VM)
@@ -95,5 +95,63 @@ psql -h localhost -p 15432 -U seoulmate -d seoulmate
 
 ```bash
 # 스키마 변경 후 적용
+psql -U seoulmate -d seoulmate -f db/init.sql
+```
+
+## VM 배포 환경 (Self-Hosted Runner)
+
+### 1. GitHub Actions Self-Hosted Runner 설치
+
+```bash
+# VM에서 실행
+mkdir actions-runner && cd actions-runner
+# GitHub repo → Settings → Actions → Runners → New self-hosted runner 의 안내를 따름
+./config.sh --url https://github.com/<owner>/<repo> --token <TOKEN>
+sudo ./svc.sh install
+sudo ./svc.sh start
+```
+
+Runner 사용자를 docker 그룹에 추가:
+
+```bash
+sudo usermod -aG docker $(whoami)
+# 재로그인 필요
+```
+
+### 2. GitHub Secrets 설정
+
+Repository → Settings → Secrets and variables → Actions에서 추가:
+
+| Secret | 값 예시 |
+|---|---|
+| `GEMINI_API_KEY` | Google AI Studio에서 발급 |
+| `DATABASE_URL` | `postgresql://seoulmate:<pw>@host.docker.internal:5432/seoulmate` |
+
+### 3. PostgreSQL Docker Bridge 허용
+
+Docker 컨테이너에서 `host.docker.internal`로 접근하므로 Docker bridge 네트워크를 허용해야 합니다.
+
+```bash
+# Docker bridge 대역 확인
+docker network inspect bridge | grep Subnet
+# 보통 172.17.0.0/16
+
+# pg_hba.conf에 추가
+echo "host all seoulmate 172.17.0.0/16 md5" | sudo tee -a /etc/postgresql/16/main/pg_hba.conf
+
+# postgresql.conf에서 listen_addresses 확인 (Docker bridge도 수신해야 함)
+# listen_addresses = 'localhost,172.17.0.1'  또는  '*'
+
+sudo systemctl reload postgresql
+```
+
+### 4. DB 마이그레이션
+
+```bash
+# VM에서 seoulmate DB가 없으면 생성
+sudo -u postgres psql -c "CREATE ROLE seoulmate WITH LOGIN PASSWORD 'your_password';"
+sudo -u postgres psql -c "CREATE DATABASE seoulmate OWNER seoulmate;"
+
+# 스키마 적용
 psql -U seoulmate -d seoulmate -f db/init.sql
 ```

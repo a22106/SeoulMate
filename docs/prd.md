@@ -98,7 +98,36 @@ SeoulMate는 Gemini의 멀티모달 능력을 활용하여 외국인이 서울�
 - "전세 보증금 반환을 안 해주면 어떻게 해야 해?"
 - "한국에서 은행 계좌 개설하려면?"
 
-### 3.3 🗂️ 카테고리별 퀵 가이드 (Supporting Feature)
+### 3.3 🎙️ 실시간 음성 대화 (Live API)
+
+**사용 시나리오**: 손이 자유롭지 않거나 텍스트 입력이 어려운 상황에서 음성으로 즉시 질문
+
+**기능 상세**:
+
+- Gemini Live API를 통한 양방향 실시간 오디오 스트리밍
+- 브라우저 마이크(PCM 16kHz) → WebSocket → FastAPI → Gemini Live API → 오디오 응답(PCM 24kHz) → 브라우저 스피커
+- 짧고 대화체적인 응답 (1-3문장)으로 자연스러운 대화 경험
+- 한국어 발음 교정 및 생활 한국어 학습 지원
+- 모델: `gemini-2.5-flash-native-audio-preview` (폴백: `gemini-2.0-flash-live-001`)
+
+**UI**: 플로팅 마이크 버튼 (화면 우하단), 탭으로 시작/종료
+
+### 3.4 🚨 SOS 긴급 모드
+
+**사용 시나리오**: 긴급 상황에서 한국어를 모르는 외국인이 즉시 도움 요청
+
+**기능 상세**:
+
+- API 호출 없이 오프라인에서도 동작하는 정적 데이터 기반
+- 3개 카테고리: 경찰(112), 소방/구급(119), 병원(1339)
+- 각 카테고리별 한국어 긴급 스크립트 + 로마자 발음 + 번역
+- 원터치 전화 걸기 (`tel:` 링크)
+- 스크립트 클립보드 복사
+- 5개 언어 지원 (영어, 한국어, 중국어, 베트남어, 일본어)
+
+**UI**: 헤더의 빨간 SOS 버튼 → 풀스크린 빨간 모달, 큰 글씨
+
+### 3.5 🗂️ 카테고리별 퀵 가이드 (Supporting Feature)
 
 **사용 시나리오**: 특정 주제에 대해 체계적인 정보가 필요할 때
 
@@ -161,10 +190,12 @@ hackerton/                      ← 모노레포 루트
 | -------- | ------------------------------------------------- | ------------------------------------ |
 | Frontend | Next.js 15 + TypeScript + Tailwind CSS            | 빠른 개발, SSR 지원, 모바일 반응형   |
 | Backend  | FastAPI (Python)                                  | Gemini SDK 호환성, 빠른 프로토타이핑 |
-| AI Model | Gemini 3.1 Pro(gemini-3.1-pro-preview) (멀티모달) | Vision + Text + Grounding 통합       |
+| AI Model | Gemini 3 Flash (멀티모달) via Vertex AI           | Vision + Text + Grounding 통합       |
+| Voice    | Gemini Live API (양방향 오디오)                   | 실시간 음성 대화, 네이티브 오디오    |
+| AI Infra | Vertex AI (GCP)                                   | ADC 인증, 프로덕션 안정성            |
 | Search   | Google Search Grounding                           | 최신 행정 정보 실시간 반영           |
 | 배포     | Vercel (Frontend) + Cloud Run (Backend)           | 무료 티어 활용, 빠른 배포            |
-| 스토리지 | 없음 (Stateless MVP)                              | 해커톤 내 최소 구현                  |
+| 스토리지 | PostgreSQL (psycopg async)                        | 대화 이력 영구 저장                  |
 
 ### 4.3 Gemini API 활용 상세
 
@@ -219,7 +250,20 @@ System Prompt:
 }
 ```
 
-#### 4.3.3 Grounding with Google Search 활용
+#### 4.3.3 Gemini Live API 활용 (음성 대화)
+
+```
+Browser Mic (PCM 16kHz) → WebSocket → FastAPI → Gemini Live API
+                                                       ↓
+Browser Speaker (PCM 24kHz) ← WebSocket ← FastAPI ← Audio Response
+```
+
+- WebSocket 엔드포인트: `WS /api/voice?language=English`
+- 모델: `gemini-2.5-flash-native-audio-preview-12-2025` (폴백: `gemini-2.0-flash-live-001`)
+- 프론트엔드: Web Audio API (ScriptProcessorNode) 기반, 추가 npm 패키지 없음
+- 음성 전용 시스템 프롬프트: 짧고 대화체적인 응답 지향
+
+#### 4.3.4 Grounding with Google Search 활용
 
 실시간 정보가 필요한 질문에 대해 Google Search Grounding을 활성화하여 최신 정보를 기반으로 응답:
 
@@ -298,8 +342,10 @@ System Prompt:
 |  2   | "How do I sort my recycling in Gangnam?" 질문 → 강남구 맞춤 분리수거 가이드 응답 | 지역별 맞춤 정보             |
 |  3   | 택배 부재 안내문 사진 → 재배달 신청 방법 단계별 안내                             | 실생활 즉시 적용             |
 |  4   | 베트남어로 전환 → 건강보험 관련 질문 → 베트남어 응답                             | 진정한 다국어 지원           |
-|  5   | 퀵 가이드 카테고리 시연                                                          | 체계적 정보 접근             |
-|  6   | 클로징: 임팩트 & 확장 가능성                                                     | —                            |
+|  5   | 🎙️ 플로팅 마이크 버튼 탭 → 영어로 질문 → AI 음성 응답 재생                      | 양방향 실시간 음성 대화      |
+|  6   | 🚨 SOS 버튼 → 빨간 긴급 모달 → 경찰 탭 → 한국어 스크립트 + 원터치 전화         | 생명 구하는 기능             |
+|  7   | 퀵 가이드 카테고리 시연                                                          | 체계적 정보 접근             |
+|  8   | 클로징: 임팩트 & 확장 가능성                                                     | —                            |
 
 ### 6.3 해커톤 이후 확장 (Post-Hackathon)
 

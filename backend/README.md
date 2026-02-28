@@ -101,7 +101,7 @@ uv run pytest
 로컬 개발:
 
 ```
-DATABASE_URL=postgresql://seoulmate:seoulmate_dev@localhost:27361/seoulmate
+DATABASE_URL=postgresql://seoulmate:seoulmate_dev@localhost:5432/seoulmate
 ```
 
 Production (VM):

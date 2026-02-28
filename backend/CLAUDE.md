@@ -54,7 +54,7 @@ backend/
 - 라우터/서비스에서 DB 접근 시 `get_pool()`로 풀을 가져와 사용한다.
 - ORM 없이 raw SQL을 사용한다. 스키마는 `db/init.sql`에서 관리한다.
 - `DATABASE_URL` 환경변수가 필수이다. 미설정 시 앱 시작이 실패한다.
-- 로컬: `localhost:27361` (Docker Compose) / Production: `localhost:5432` (VM의 기존 PostgreSQL)
+- 로컬: `localhost:5432` (Docker Compose) / Production: `localhost:5432` (VM의 기존 PostgreSQL)
 
 ### 6. 패키지 관리 — uv 사용
 
