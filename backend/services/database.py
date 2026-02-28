@@ -20,8 +20,9 @@ async def init_pool() -> None:
         min_size=1,
         max_size=5,
         kwargs={"row_factory": dict_row},
+        open=False,
     )
-    await _pool.open()
+    await _pool.open(wait=True)
 
 
 async def close_pool() -> None:

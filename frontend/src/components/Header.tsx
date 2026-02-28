@@ -16,6 +16,7 @@ interface HeaderProps {
 	onNewChat: () => void;
 	onSOS: () => void;
 	onHistory: () => void;
+	onDemo?: () => void;
 }
 
 export default function Header({
@@ -24,6 +25,7 @@ export default function Header({
 	onNewChat,
 	onSOS,
 	onHistory,
+	onDemo,
 }: HeaderProps) {
 	return (
 		<header className="flex shrink-0 items-center justify-between border-b border-subtle bg-surface px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
@@ -66,6 +68,15 @@ export default function Header({
 						<circle cx="12" cy="12" r="10" />
 					</svg>
 				</button>
+				{onDemo && (
+					<button
+						type="button"
+						onClick={onDemo}
+						className="rounded-[6px] bg-hanok-coral px-2.5 py-1.5 text-sm font-bold text-white transition-colors hover:brightness-110"
+					>
+						{t(language, "demo")}
+					</button>
+				)}
 				<button
 					type="button"
 					onClick={onNewChat}

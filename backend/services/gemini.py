@@ -1,6 +1,8 @@
 import os
 import json
+import time
 import base64
+import logging
 from collections.abc import Generator
 
 from dotenv import load_dotenv
@@ -11,7 +13,11 @@ from schemas.chat import ChatRequest
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
 MODEL = "gemini-3-flash-preview"
+
+_client: genai.Client | None = None
 
 SYSTEM_PROMPT = """You are SeoulMate, an expert life assistant for foreigners living in Seoul, South Korea.
 
@@ -45,7 +51,10 @@ DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.docu
 
 
 def _get_client() -> genai.Client:
-    return genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    global _client
+    if _client is None:
+        _client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    return _client
 
 
 def _make_file_part(file_url: str, mime_type: str) -> types.Part:
@@ -118,13 +127,25 @@ def stream_chat(req: ChatRequest) -> Generator[str, None, None]:
     )
 
     client = _get_client()
-    response = client.models.generate_content_stream(
-        model=MODEL,
-        contents=contents,
-        config=config,
-    )
-    for chunk in response:
-        if chunk.text:
-            data = json.dumps({"type": "text", "content": chunk.text})
-            yield f"data: {data}\n\n"
-    yield "data: [DONE]\n\n"
+    max_retries = 2
+
+    for attempt in range(max_retries + 1):
+        yielded = False
+        try:
+            response = client.models.generate_content_stream(
+                model=MODEL,
+                contents=contents,
+                config=config,
+            )
+            for chunk in response:
+                if chunk.text:
+                    data = json.dumps({"type": "text", "content": chunk.text})
+                    yield f"data: {data}\n\n"
+                    yielded = True
+            yield "data: [DONE]\n\n"
+            return
+        except Exception:
+            if yielded or attempt >= max_retries:
+                raise
+            logger.warning("Gemini connection failed (attempt %d), retrying...", attempt + 1)
+            time.sleep(1)
