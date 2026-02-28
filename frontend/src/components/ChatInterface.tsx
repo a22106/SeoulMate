@@ -61,11 +61,13 @@ const QUICK_GUIDES = [
 interface ChatInterfaceProps {
 	language: string;
 	conversationId?: string;
+	enableVoice?: boolean;
 }
 
 export default function ChatInterface({
 	language,
 	conversationId,
+	enableVoice,
 }: ChatInterfaceProps) {
 	const router = useRouter();
 	const [messages, setMessages] = useState<Message[]>([]);
@@ -305,7 +307,7 @@ export default function ChatInterface({
 			</div>
 
 			{/* Input */}
-			<ChatInput onSend={handleSend} disabled={isLoading} language={language} />
+			<ChatInput onSend={handleSend} disabled={isLoading} language={language} enableVoice={enableVoice} />
 		</div>
 	);
 }

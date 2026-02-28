@@ -6,7 +6,6 @@ import ChatHistoryPanel from "@/components/ChatHistoryPanel";
 import ChatInterface from "@/components/ChatInterface";
 import Header from "@/components/Header";
 import SOSModal from "@/components/SOSModal";
-import VoiceButton from "@/components/VoiceButton";
 
 export default function Home() {
 	const [language, setLanguage] = useState("English");
@@ -28,7 +27,6 @@ export default function Home() {
 				onHistory={() => setShowHistory(true)}
 			/>
 			<ChatInterface language={language} />
-			<VoiceButton language={language} />
 			{showSOS && (
 				<SOSModal language={language} onClose={() => setShowSOS(false)} />
 			)}

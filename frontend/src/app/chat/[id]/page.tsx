@@ -6,7 +6,6 @@ import ChatHistoryPanel from "@/components/ChatHistoryPanel";
 import ChatInterface from "@/components/ChatInterface";
 import Header from "@/components/Header";
 import SOSModal from "@/components/SOSModal";
-import VoiceButton from "@/components/VoiceButton";
 import { getConversation } from "@/lib/api";
 
 export default function ChatPage() {
@@ -57,8 +56,7 @@ export default function ChatPage() {
 				onSOS={() => setShowSOS(true)}
 				onHistory={() => setShowHistory(true)}
 			/>
-			<ChatInterface language={language} conversationId={params.id} />
-			<VoiceButton language={language} />
+			<ChatInterface language={language} conversationId={params.id} enableVoice />
 			{showSOS && (
 				<SOSModal language={language} onClose={() => setShowSOS(false)} />
 			)}
