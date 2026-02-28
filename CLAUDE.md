@@ -4,73 +4,94 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**SeoulMate** — Gemini 3 Seoul Hackathon project (Feb 28, 2026). AI agent helping foreign residents in Seoul navigate daily life through photo-based document interpretation and conversational Q&A. Uses Google Gemini 3.1 Pro for multimodal analysis with Google Search Grounding.
+**SeoulMate** — Gemini 3 Seoul Hackathon project (Feb 28, 2026). AI agent helping foreign residents in Seoul navigate daily life through photo-based document interpretation and conversational Q&A. Uses Gemini multimodal analysis with Google Search Grounding.
 
-**Track**: Gemini for Social Good
-**Team**: 1 person + Claude Code
-**Deadline**: 5 PM submission, 1-min demo video required
+**Track**: Gemini for Social Good | **Team**: 1 person + Claude Code | **Deadline**: 5 PM submission, 1-min demo video
 
-## Expected Commands
+## Commands
 
 ```bash
 # Frontend (frontend/)
-cd frontend
-npm install
-npm run dev          # localhost:3000
-npm run build
-npm run lint
+pnpm install
+pnpm dev              # localhost:3000
+pnpm build
+pnpm lint
 
 # Backend (backend/)
-cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload  # localhost:8000
+uv sync               # install dependencies (NOT pip)
+uv run uvicorn main:app --reload   # localhost:8000
+uv run pytest          # run tests
+uv add <package>       # add dependency
+uv add --dev <package> # add dev dependency
+```
+
+## Environment Variables
+
+```bash
+# backend/.env (see backend/.env.example)
+GEMINI_API_KEY=...              # from Google AI Studio
+
+# frontend (inline or .env.local)
+NEXT_PUBLIC_API_URL=http://localhost:8000   # default
 ```
 
 ## Architecture
 
-Monorepo with three-tier stateless MVP:
+Monorepo, stateless MVP (no database). Client-side message history passed per request.
 
 ```
 hackerton/
-├── frontend/          # Next.js 15 + TypeScript + Tailwind CSS
-├── backend/           # FastAPI (Python) → Gemini API
-└── docs/              # PRD, design system
+├── frontend/          # Next.js 15 + React 19 + Tailwind CSS 4 + TypeScript
+├── backend/           # FastAPI (Python 3.13+) + google-genai SDK
+└── docs/              # PRD (prd.md), design system (seoulmate-design-system.jsx)
 ```
 
-- **No database** — stateless for hackathon scope
-- **Streaming responses** (SSE) for AI calls
-- **Function calling** for structured data (district info, visa procedures)
-- **Google Search Grounding** for real-time administrative info
+### Frontend Data Flow
 
-## Tech Stack
+`page.tsx` (language state) → `ChatInterface` (messages + streaming) → `ChatInput` / `MessageBubble`
 
-| Layer    | Technology                                  |
-| -------- | ------------------------------------------- |
-| Frontend | Next.js 15 + TypeScript + Tailwind CSS      |
-| Backend  | FastAPI (Python)                            |
-| AI Model | Gemini 3.1 Pro (gemini-3.1-pro-preview)     |
-| Search   | Google Search Grounding                     |
-| Deploy   | Vercel (frontend) + Cloud Run (backend)     |
+- State lives in React hooks (no state management library)
+- Images are Base64-encoded client-side, sent inline in JSON
+- SSE streaming via Fetch API with manual event parsing (`lib/api.ts`)
+- Markdown rendering in AI bubbles uses simple regex (no remark/marked library)
+- Path alias: `@/*` → `./src/*`
+- Design tokens defined as CSS variables in `globals.css` `@theme` block
 
-## Core Features (Priority Order)
+### Backend Conventions (see also `backend/CLAUDE.md`)
 
-**P0**: Image upload + Gemini Vision analysis, Chat Q&A with Search Grounding, multilingual response (EN + 2 more)
-**P1**: Mobile responsive UI + camera, 3 quick guide categories, Function Calling for district-specific info
-**P2**: UI polish, error handling, demo prep
+- **Routers** (`routers/`): request parsing → service call → response only. No business logic.
+- **Services** (`services/`): pure Python functions, no FastAPI imports. Gemini API calls live here.
+- **Schemas** (`schemas/`): Pydantic models shared by routers and services.
+- **main.py**: only app init, CORS middleware, router registration. No endpoint definitions.
+- **Tests**: `uv run pytest`. Mock all external API calls. Test file naming: `tests/test_<module>.py`.
+
+### SSE Streaming Contract (POST /api/chat)
+
+Request:
+```json
+{"message": "str", "image": "base64|null", "language": "English", "history": [{"role": "user|assistant", "text": "str", "image": "base64|null"}]}
+```
+
+Response (text/event-stream):
+```
+data: {"type": "text", "content": "chunk"}\n\n
+data: [DONE]\n\n
+```
+
+### Current Gemini Model
+
+`gemini-2.5-flash-preview-05-20` in `services/gemini.py`. Use Flash during dev, Pro for demo ($20 API budget).
 
 ## Design System
 
 Defined in `docs/seoulmate-design-system.jsx`. Light mode only.
 
-- **Primary**: Seoul Blue `#2563EB` (trust, CTA)
-- **Secondary**: Hanok Coral `#F97316` (accent, alerts)
-- **Typography**: Outfit (headings) + Pretendard (body, Korean support) + JetBrains Mono (code)
-- **Radius**: 6/12/16/24px scale
-- **Mobile-first**: camera button prominent, card-based results
+- **Primary**: Seoul Blue `#2563EB` | **Secondary**: Hanok Coral `#F97316`
+- **Fonts**: Outfit (headings) + Pretendard Variable (body/Korean) + JetBrains Mono (code)
+- **Mobile-first**: camera button prominent, card-based results, safe-area insets
 
 ## Key Constraints
 
-- **Hackathon rules**: `hackerton-rules.md` — demo scoring: Demo 50%, Impact 25%, Creativity 15%, Pitch 10%
+- **Hackathon scoring**: Demo 50%, Impact 25%, Creativity 15%, Pitch 10%
 - **Prohibited**: basic chatbots, simple image analyzers, Streamlit apps, medical/mental health advisors
-- **API budget**: $20 Gemini credit (use Flash during dev, Pro for demo)
-- **Full PRD**: `docs/prd.md`
+- **Full PRD**: `docs/prd.md` | **Rules**: `hackerton-rules.md`

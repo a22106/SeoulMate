@@ -77,7 +77,8 @@ def stream_chat(req: ChatRequest) -> Generator[str, None, None]:
         tools=[types.Tool(google_search=types.GoogleSearch())],
     )
 
-    response = _get_client().models.generate_content_stream(
+    client = _get_client()
+    response = client.models.generate_content_stream(
         model=MODEL,
         contents=contents,
         config=config,
