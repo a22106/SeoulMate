@@ -18,10 +18,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Write backend .env.prod from secrets
-        run: printf 'GEMINI_API_KEY=%s\nDATABASE_URL=%s\n' "$GEMINI_API_KEY" "$DATABASE_URL" > backend/.env.prod
+        run: printf 'GEMINI_API_KEY=%s\nDATABASE_URL=%s\nGCLOUD_PROJECT=%s\n' "$GEMINI_API_KEY" "$DATABASE_URL" "$GCLOUD_PROJECT" > backend/.env.prod
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GCLOUD_PROJECT: ${{ secrets.GCLOUD_PROJECT }}
 
       - name: Deploy with Docker Compose
         run: docker compose -f docker-compose.prod.yml up -d --build
