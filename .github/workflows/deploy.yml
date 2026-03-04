@@ -1,4 +1,4 @@
-name: Deploy Backend
+name: Deploy Backend (Self-Hosted Docker)
 
 on:
   push:
@@ -6,29 +6,121 @@ on:
     paths:
       - "backend/**"
       - "db/**"
-      - "docker-compose.prod.yml"
+  workflow_dispatch:
 
 concurrency:
-  group: deploy
+  group: deploy-main
   cancel-in-progress: true
 
 jobs:
   deploy:
-    runs-on: [self-hosted, linux, arm64]
-    steps:
-      - uses: actions/checkout@v4
+    runs-on: [self-hosted, Linux, ARM64, rpi5]
+    permissions:
+      contents: read
+    env:
+      GOOGLE_CHAT_WEBHOOK: ${{ secrets.GOOGLE_CHAT_DEPLOY_WEBHOOK }}
+      NPM_NETWORK: nginx-proxy-manager_default
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_ADMIN_DB: postgres
+      APP_DB_NAME: seoulmate
+      APP_CONTAINER: seoulmate-backend
+      APP_PORT: "30002"
 
-      - name: Write backend .env.prod from secrets
-        run: printf 'GEMINI_API_KEY=%s\nDATABASE_URL=%s\nGCLOUD_PROJECT=%s\n' "$GEMINI_API_KEY" "$DATABASE_URL" "$GCLOUD_PROJECT" > backend/.env.prod
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          GCLOUD_PROJECT: ${{ secrets.GCLOUD_PROJECT }}
+    steps:
+      - name: Notify deploy started
+        if: env.GOOGLE_CHAT_WEBHOOK != ''
+        run: |
+          curl -sS -X POST "${{ env.GOOGLE_CHAT_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "cards": [{
+                "header": {
+                  "title": "🚀 배포 시작",
+                  "subtitle": "SeoulMate Backend (Production)"
+                },
+                "sections": [{
+                  "widgets": [{
+                    "keyValue": {
+                      "topLabel": "Branch",
+                      "content": "main"
+                    }
+                  }, {
+                    "keyValue": {
+                      "topLabel": "Commit",
+                      "content": "${{ github.sha }}"
+                    }
+                  }, {
+                    "keyValue": {
+                      "topLabel": "Author",
+                      "content": "${{ github.actor }}"
+                    }
+                  }]
+                }]
+              }]
+            }'
+
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Build Docker image
+        run: docker build -t seoulmate-backend:main ./backend
+
+      - name: Discover PostgreSQL container/network
+        run: |
+          POSTGRES_CONTAINER_ID=$(docker ps --filter "publish=5432" --filter "health=healthy" --format '{{.ID}}' | head -n1)
+          if [ -z "$POSTGRES_CONTAINER_ID" ]; then
+            POSTGRES_CONTAINER_ID=$(docker ps --filter "publish=5432" --format '{{.ID}}' | head -n1)
+          fi
+          if [ -z "$POSTGRES_CONTAINER_ID" ]; then
+            echo "No running PostgreSQL container exposing port 5432 was found."
+            exit 1
+          fi
+
+          POSTGRES_CONTAINER_NAME=$(docker inspect -f '{{.Name}}' "$POSTGRES_CONTAINER_ID" | sed 's#^/##')
+          POSTGRES_NETWORK=$(docker inspect -f '{{range $name, $_ := .NetworkSettings.Networks}}{{printf "%s\n" $name}}{{end}}' "$POSTGRES_CONTAINER_ID" | head -n1)
+
+          if [ -z "$POSTGRES_NETWORK" ]; then
+            echo "Unable to determine PostgreSQL Docker network."
+            exit 1
+          fi
+
+          APP_DATABASE_URL="postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@${POSTGRES_CONTAINER_NAME}:${{ env.POSTGRES_PORT }}/${{ env.APP_DB_NAME }}"
+
+          echo "POSTGRES_CONTAINER_ID=$POSTGRES_CONTAINER_ID" >> "$GITHUB_ENV"
+          echo "POSTGRES_CONTAINER_NAME=$POSTGRES_CONTAINER_NAME" >> "$GITHUB_ENV"
+          echo "POSTGRES_NETWORK=$POSTGRES_NETWORK" >> "$GITHUB_ENV"
+          echo "APP_DATABASE_URL=$APP_DATABASE_URL" >> "$GITHUB_ENV"
+
+      - name: Ensure application database exists
+        run: |
+          DB_EXISTS=$(docker exec \
+            -e PGPASSWORD="${{ env.POSTGRES_PASSWORD }}" \
+            "${{ env.POSTGRES_CONTAINER_ID }}" \
+            psql -h localhost -p "${{ env.POSTGRES_PORT }}" \
+              -U "${{ env.POSTGRES_USER }}" -d "${{ env.POSTGRES_ADMIN_DB }}" \
+              -tAqc "SELECT 1 FROM pg_database WHERE datname='${{ env.APP_DB_NAME }}';")
+
+          if [ "$DB_EXISTS" != "1" ]; then
+            docker exec \
+              -e PGPASSWORD="${{ env.POSTGRES_PASSWORD }}" \
+              "${{ env.POSTGRES_CONTAINER_ID }}" \
+              psql -h localhost -p "${{ env.POSTGRES_PORT }}" \
+                -U "${{ env.POSTGRES_USER }}" -d "${{ env.POSTGRES_ADMIN_DB }}" \
+                -v ON_ERROR_STOP=1 \
+                -c "CREATE DATABASE \"${{ env.APP_DB_NAME }}\";"
+          fi
 
       - name: Apply database schema
-        run: psql "$DATABASE_URL" -f db/init.sql
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          docker exec \
+            -e PGPASSWORD="${{ env.POSTGRES_PASSWORD }}" \
+            "${{ env.POSTGRES_CONTAINER_ID }}" \
+            psql -h localhost -p "${{ env.POSTGRES_PORT }}" \
+              -U "${{ env.POSTGRES_USER }}" -d "${{ env.APP_DB_NAME }}" \
+              -v ON_ERROR_STOP=1 \
+              -f - < db/init.sql
 
       - name: Verify GCP Application Default Credentials
         run: |
@@ -37,23 +129,105 @@ jobs:
             exit 1
           fi
 
-      - name: Deploy with Docker Compose
-        run: docker compose -f docker-compose.prod.yml up -d --build
-
-      - name: Wait for healthy
+      - name: Replace running container
         run: |
-          for i in $(seq 1 24); do
-            if curl -sf http://localhost:30002/health; then
-              echo ""
+          docker rm -f "${{ env.APP_CONTAINER }}" 2>/dev/null || true
+          docker run -d \
+            --name "${{ env.APP_CONTAINER }}" \
+            --restart unless-stopped \
+            --network "${{ env.NPM_NETWORK }}" \
+            -p ${{ env.APP_PORT }}:8000 \
+            -e GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" \
+            -e DATABASE_URL="${{ env.APP_DATABASE_URL }}" \
+            -e GCLOUD_PROJECT="${{ secrets.GCLOUD_PROJECT }}" \
+            -e GOOGLE_APPLICATION_CREDENTIALS=/gcp/adc.json \
+            -v ${HOME}/.config/gcloud/application_default_credentials.json:/gcp/adc.json:ro \
+            seoulmate-backend:main
+
+      - name: Connect app to PostgreSQL network
+        run: |
+          if [ "${{ env.POSTGRES_NETWORK }}" != "${{ env.NPM_NETWORK }}" ]; then
+            docker network connect "${{ env.POSTGRES_NETWORK }}" "${{ env.APP_CONTAINER }}"
+          fi
+
+      - name: Health check
+        run: |
+          for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:${{ env.APP_PORT }}/health >/dev/null; then
               echo "Health check passed"
               exit 0
             fi
-            echo "Waiting for backend... ($i/12)"
-            sleep 5
+            echo "Waiting for backend... ($i/20)"
+            sleep 3
           done
-          echo "Health check failed after 120s"
-          docker compose -f docker-compose.prod.yml logs backend
+          echo "Health check failed after 60s"
+          docker logs --tail 100 "${{ env.APP_CONTAINER }}" || true
           exit 1
 
       - name: Prune old images
         run: docker image prune -f
+
+      - name: Notify deploy success
+        if: success() && env.GOOGLE_CHAT_WEBHOOK != ''
+        run: |
+          curl -sS -X POST "${{ env.GOOGLE_CHAT_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "cards": [{
+                "header": {
+                  "title": "✅ 배포 완료",
+                  "subtitle": "SeoulMate Backend (Production)"
+                },
+                "sections": [{
+                  "widgets": [{
+                    "keyValue": {
+                      "topLabel": "Status",
+                      "content": "Success"
+                    }
+                  }, {
+                    "keyValue": {
+                      "topLabel": "Commit",
+                      "content": "${{ github.sha }}"
+                    }
+                  }]
+                }]
+              }]
+            }'
+
+      - name: Notify deploy failed
+        if: failure() && env.GOOGLE_CHAT_WEBHOOK != ''
+        run: |
+          curl -sS -X POST "${{ env.GOOGLE_CHAT_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "cards": [{
+                "header": {
+                  "title": "❌ 배포 실패",
+                  "subtitle": "SeoulMate Backend (Production)"
+                },
+                "sections": [{
+                  "widgets": [{
+                    "keyValue": {
+                      "topLabel": "Status",
+                      "content": "Failed"
+                    }
+                  }, {
+                    "keyValue": {
+                      "topLabel": "Commit",
+                      "content": "${{ github.sha }}"
+                    }
+                  }, {
+                    "buttons": [{
+                      "textButton": {
+                        "text": "View Logs",
+                        "onClick": {
+                          "openLink": {
+                            "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                          }
+                        }
+                      }
+                    }]
+                  }]
+                }]
+              }]
+            }'
