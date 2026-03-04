@@ -76,6 +76,10 @@ export default function ChatPage() {
 				conversationId={isNew ? undefined : params.id}
 				enableVoice
 			/>
+			<footer className="shrink-0 border-t border-black/5 bg-surface px-4 py-2 text-center text-xs text-text-tertiary">
+				이 프로젝트는 Gemini 3 서울 해커톤을 위해 제작된 프로젝트로써, 기능이
+				제한적입니다.
+			</footer>
 			{showSOS && (
 				<SOSModal language={language} onClose={() => setShowSOS(false)} />
 			)}

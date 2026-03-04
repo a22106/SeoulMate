@@ -111,6 +111,13 @@ export async function sendChatMessage(
 		});
 
 		if (!res.ok) {
+			if (res.status === 429) {
+				const body = await res.json().catch(() => null);
+				throw new Error(
+					body?.detail ||
+						"Daily question limit reached. Please try again tomorrow.",
+				);
+			}
 			throw new Error(`API error: ${res.status}`);
 		}
 
